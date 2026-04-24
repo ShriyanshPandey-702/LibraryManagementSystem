@@ -1,0 +1,156 @@
+/* Global Variables */
+:root {
+    --primary-color: #4361ee;
+    --secondary-color: #3f37c9;
+    --success-color: #4cc9f0;
+    --danger-color: #f72585;
+    --dark-color: #2b2d42;
+    --light-color: #f8f9fa;
+    --bg-color: #f0f2f5;
+    --glass-bg: rgba(255, 255, 255, 0.9);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--dark-color);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Glassmorphism Cards */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 15px;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    padding: 2rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.2);
+}
+
+/* Navbar Customization */
+.custom-navbar {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    padding: 1rem 0;
+}
+
+.custom-navbar .navbar-brand {
+    color: white;
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+}
+
+.custom-navbar .nav-link {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    margin: 0 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.custom-navbar .nav-link:hover {
+    color: white;
+    text-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+/* Buttons */
+.btn-primary-custom {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary-custom:hover {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
+    color: white;
+}
+
+/* Forms */
+.form-control {
+    border-radius: 8px;
+    padding: 0.8rem;
+    border: 1px solid #dee2e6;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+}
+
+/* Dashboard Cards */
+.stat-card {
+    border-radius: 15px;
+    padding: 1.5rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card .icon {
+    position: absolute;
+    right: -20px;
+    bottom: -20px;
+    font-size: 100px;
+    opacity: 0.2;
+}
+
+.bg-gradient-primary { background: linear-gradient(135deg, #4361ee, #3a0ca3); }
+.bg-gradient-success { background: linear-gradient(135deg, #4cc9f0, #2a9d8f); }
+.bg-gradient-warning { background: linear-gradient(135deg, #f72585, #b5179e); }
+.bg-gradient-info { background: linear-gradient(135deg, #7209b7, #480ca8); }
+
+/* Main Content Wrapper */
+.main-content {
+    flex: 1;
+    padding: 2rem 0;
+}
+
+/* Tables */
+.table-custom {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+.table-custom thead {
+    background-color: var(--dark-color);
+    color: white;
+}
+.table-custom th, .table-custom td {
+    vertical-align: middle;
+    padding: 1rem;
+}
+
+/* Footer */
+footer {
+    background-color: white;
+    padding: 1.5rem 0;
+    text-align: center;
+    color: #6c757d;
+    border-top: 1px solid #dee2e6;
+    margin-top: auto;
+}
