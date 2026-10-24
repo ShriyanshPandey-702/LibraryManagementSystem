@@ -219,28 +219,7 @@ Follow these steps to run the project locally:
 
 ---
 
-## 📸 10. Screenshots
-
-*(Replace placeholder links with actual image paths)*
-
-### Admin Dashboard
-![Admin Dashboard](https://via.placeholder.com/800x400?text=Admin+Dashboard+Screenshot)
-
-### Student Dashboard
-![Student Dashboard](https://via.placeholder.com/800x400?text=Student+Dashboard+Screenshot)
-
-### Add / Edit Book
-![Add Book](https://via.placeholder.com/800x400?text=Add+Book+Screenshot)
-
-### Issue Book Workflow
-![Issue Book](https://via.placeholder.com/800x400?text=Issue+Book+Screenshot)
-
-### Book Requests
-![Book Requests](https://via.placeholder.com/800x400?text=Book+Requests+Screenshot)
-
----
-
-## 🔒 11. Security & Validation
+## 🔒 10. Security & Validation
 
 This project implements industry-standard practices to ensure stability and security:
 
@@ -252,7 +231,7 @@ This project implements industry-standard practices to ensure stability and secu
 
 ---
 
-## 🔮 12. Future Enhancements
+## 🔮 11. Future Enhancements
 
 * 📧 **Email Notifications:** Auto-send overdue reminders via SMTP.
 * 📱 **QR Code Integration:** Issue and return books by scanning generated QR codes.
