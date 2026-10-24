@@ -12,17 +12,17 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.release>25</maven.compiler.release>
+        <maven.compiler.release>17</maven.compiler.release>
     </properties>
 
     <dependencies>
 
         <!-- Servlet -->
         <dependency>
-        <groupId>jakarta.servlet</groupId>
-        <artifactId>jakarta.servlet-api</artifactId>
-        <version>6.1.0</version>
-        <scope>provided</scope>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.1.0</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- MySQL -->
@@ -75,14 +75,18 @@
                 </configuration>
             </plugin>
 
-            <!-- TOMCAT PLUGIN -->
+            <!-- Jetty EE10 Plugin (Supports Jakarta EE 10 / Servlet 6.0) -->
             <plugin>
-                <groupId>org.apache.tomcat.maven</groupId>
-                <artifactId>tomcat10-maven-plugin</artifactId>
-                <version>3.0.0</version>
+                <groupId>org.eclipse.jetty.ee10</groupId>
+                <artifactId>jetty-ee10-maven-plugin</artifactId>
+                <version>12.0.16</version>
                 <configuration>
-                    <port>8080</port>
-                    <path>/LibraryManagementSystem</path>
+                    <httpConnector>
+                        <port>8080</port>
+                    </httpConnector>
+                    <webApp>
+                        <contextPath>/LibraryManagementSystem</contextPath>
+                    </webApp>
                 </configuration>
             </plugin>
 

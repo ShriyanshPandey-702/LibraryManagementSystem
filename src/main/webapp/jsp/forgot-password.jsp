@@ -10,7 +10,10 @@
         </div>
 
         <% String userType = (String) request.getAttribute("userType");
-           if (userType == null) {
+           if (userType == null || userType.trim().isEmpty()) {
+               userType = request.getParameter("userType");
+           }
+           if (userType == null || (!"student".equalsIgnoreCase(userType) && !"admin".equalsIgnoreCase(userType))) {
                userType = "admin";
            }
            String errorMessage = (String) request.getAttribute("errorMessage"); %>

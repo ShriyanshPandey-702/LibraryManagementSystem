@@ -57,7 +57,7 @@ The system features a highly responsive, modern "glass-card" UI and robust back-
 | **Database** | MySQL |
 | **Data Access** | JDBC (Java Database Connectivity) |
 | **Build Tool** | Apache Maven |
-| **Server** | Apache Tomcat 7 / 8 / 9 |
+| **Server** | Apache Tomcat 10+ (10.1 / 11) / Eclipse Jetty 12 |
 | **Architecture** | 3-Tier MVC Architecture |
 
 ---
@@ -176,25 +176,46 @@ Follow these steps to run the project locally:
    git clone https://github.com/yourusername/LibraryManagementSystem.git
    cd LibraryManagementSystem
    ```
-2. **Set up MySQL Database:**
-   * Open MySQL Workbench or terminal.
-   * Create the database: `CREATE DATABASE library_db;`
-   * *(Optional)* The project includes an auto-migrator that will build tables on first run, but you can import a `.sql` dump if provided.
-3. **Configure Database Credentials:**
-   * Open `src/main/java/util/DBConnection.java`
-   * Update the `URL`, `USER`, and `PASSWORD` constants to match your local MySQL setup.
-4. **Build the Project:**
-   ```bash
-   mvn clean package
-   ```
-5. **Deploy on Tomcat:**
-   * Run via Maven plugin:
-     ```bash
-     mvn tomcat7:run
+2. **Start and Set up MySQL Database:**
+   * Ensure MySQL is running on port `3306`.
+   * Create the database (or let the app auto-create it):
+     ```sql
+     CREATE DATABASE IF NOT EXISTS library_management;
      ```
-   * *Alternatively*, deploy the generated `.war` file from the `target/` directory to your standalone Tomcat `webapps/` folder.
-6. **Access the Application:**
-   * Open your browser and navigate to: `http://localhost:8080/LibraryManagementSystem`
+   * *(Optional)* Import the schema dump:
+     ```bash
+     mysql -u root -p library_management < database/library_management.sql
+     ```
+     *(Note: The built-in `DatabaseSchemaMigrator` also auto-creates all required tables and default admin credentials upon first connection).*
+
+3. **Configure Database Credentials:**
+   * Open `src/main/java/util/DBConnection.java` to set your credentials (defaults: user `root`, password `newmac000`), or simply pass environment variables without modifying source code:
+     ```bash
+     export DB_USER=root
+     export DB_PASSWORD=your_mysql_password
+     ```
+
+4. **Run the Application:**
+   * **Option A: Quick Start via Maven (Recommended):**
+     ```bash
+     mvn clean jetty:run
+     ```
+     *(Starts instantly on port 8080 with Jakarta EE 10 support).*
+
+   * **Option B: Standalone Apache Tomcat 10+:**
+     1. Build the WAR:
+        ```bash
+        mvn clean package
+        ```
+     2. Copy `target/LibraryManagementSystem.war` to your Tomcat `webapps/` folder.
+     3. Start Tomcat using `./bin/startup.sh` (or `startup.bat` on Windows).
+
+5. **Access the Application:**
+   * Open your browser and navigate to:
+     `http://localhost:8080/LibraryManagementSystem`
+   * **Default Admin Credentials:**
+     - Username: `admin`
+     - Password: `admin123`
 
 ---
 

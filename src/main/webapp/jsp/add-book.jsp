@@ -35,6 +35,7 @@
                         <label class="form-label fw-bold">Author</label>
                         <input type="text" name="author" class="form-control" required placeholder="e.g. Thomas H. Cormen">
                     </div>
+                    <div class="col-md-4">
                         <label class="form-label fw-bold">Category</label>
                         <select name="category" id="categorySelect" class="form-select" required onchange="toggleCustomCategory()">
                             <option value="">Select Category</option>
@@ -63,6 +64,7 @@
                         <div id="customCategoryDiv" class="mt-2" style="display: none;">
                             <input type="text" name="customCategory" id="customCategory" class="form-control" placeholder="Enter custom category">
                         </div>
+                    </div>
                     <div class="col-md-4">
                         <label class="form-label fw-bold">ISBN (13 Digits)</label>
                         <input type="text" name="isbn" class="form-control" placeholder="e.g. 9780262033848" 

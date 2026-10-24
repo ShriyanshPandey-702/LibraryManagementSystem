@@ -30,7 +30,7 @@
             <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center">
                     <label class="form-label fw-bold mb-0">Password</label>
-                    <a href="<%= request.getContextPath() %>/jsp/forgot-password.jsp?userType=student" class="small text-decoration-none">Forgot Password?</a>
+                    <a href="<%= request.getContextPath() %>/ForgotPasswordServlet?userType=student" class="small text-decoration-none">Forgot Password?</a>
                 </div>
                 <div class="input-group mt-2">
                     <span class="input-group-text bg-white"><i class="fas fa-lock text-muted"></i></span>

@@ -1,4 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
+<%
+    if (session.getAttribute("adminUser") == null) {
+        response.sendRedirect(request.getContextPath() + "/jsp/login.jsp");
+        return;
+    }
+%>
 <jsp:include page="includes/header.jsp" />
 <jsp:include page="includes/admin-navbar.jsp" />
 
