@@ -10,6 +10,7 @@ public class Book {
     private String rackNo;
     private double price;
     private int quantity;
+    private boolean deleted;
 
     public Book() {
     }
@@ -37,4 +38,7 @@ public class Book {
 
     public int getQuantity() { return quantity; }
     public void setQuantity(int quantity) { this.quantity = quantity; }
+
+    public boolean isDeleted() { return deleted; }
+    public void setDeleted(boolean deleted) { this.deleted = deleted; }
 }

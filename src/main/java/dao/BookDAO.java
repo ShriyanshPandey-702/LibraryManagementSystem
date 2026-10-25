@@ -36,7 +36,7 @@ public class BookDAO {
     public List<Book> getAllBooks() {
         List<Book> books = new ArrayList<>();
 
-        String sql = "SELECT id, title, author, category, isbn, rack_no, price, quantity FROM books ORDER BY id DESC";
+        String sql = "SELECT id, title, author, category, isbn, rack_no, price, quantity FROM books WHERE is_deleted = 0 ORDER BY id DESC";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
@@ -67,7 +67,7 @@ public class BookDAO {
     public List<Book> getAvailableBooks() {
         List<Book> books = new ArrayList<>();
 
-        String sql = "SELECT id, title, author, category, isbn, rack_no, price, quantity FROM books WHERE quantity > 0 ORDER BY id DESC";
+        String sql = "SELECT id, title, author, category, isbn, rack_no, price, quantity FROM books WHERE is_deleted = 0 AND quantity > 0 ORDER BY id DESC";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
@@ -94,7 +94,7 @@ public class BookDAO {
     }
 
     public int getTotalBookTitles() {
-        String sql = "SELECT COUNT(*) FROM books";
+        String sql = "SELECT COUNT(*) FROM books WHERE is_deleted = 0";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
@@ -115,7 +115,7 @@ public class BookDAO {
         List<Book> books = new ArrayList<>();
 
         String sql = "SELECT id, title, author, category, isbn, rack_no, price, quantity FROM books "
-                + "WHERE quantity > 0 AND (title LIKE ? OR author LIKE ? OR category LIKE ? OR isbn LIKE ?) ORDER BY id DESC";
+                + "WHERE is_deleted = 0 AND quantity > 0 AND (title LIKE ? OR author LIKE ? OR category LIKE ? OR isbn LIKE ?) ORDER BY id DESC";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -152,7 +152,7 @@ public class BookDAO {
         List<Book> books = new ArrayList<>();
 
         String sql = "SELECT id, title, author, category, isbn, rack_no, price, quantity FROM books "
-                + "WHERE title LIKE ? OR author LIKE ? OR category LIKE ? OR isbn LIKE ? ORDER BY id DESC";
+                + "WHERE is_deleted = 0 AND (title LIKE ? OR author LIKE ? OR category LIKE ? OR isbn LIKE ?) ORDER BY id DESC";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -260,7 +260,7 @@ public class BookDAO {
     }
 
     public boolean deleteBook(int id) {
-        String sql = "DELETE FROM books WHERE id=?";
+        String sql = "UPDATE books SET is_deleted=1 WHERE id=?";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -275,7 +275,7 @@ public class BookDAO {
     }
 
     public int getTotalBookCopies() {
-        String sql = "SELECT IFNULL(SUM(quantity), 0) FROM books";
+        String sql = "SELECT IFNULL(SUM(quantity), 0) FROM books WHERE is_deleted = 0";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
@@ -293,7 +293,7 @@ public class BookDAO {
     }
 
     public int getLowStockCount() {
-        String sql = "SELECT COUNT(*) FROM books WHERE quantity <= 2";
+        String sql = "SELECT COUNT(*) FROM books WHERE is_deleted = 0 AND quantity <= 2";
 
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
@@ -309,8 +309,27 @@ public class BookDAO {
 
         return 0;
     }
+
+    public java.util.Map<String, Integer> getCategoryDistribution() {
+        java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
+        String sql = "SELECT IFNULL(category, 'General') as cat, COUNT(*) as cnt " +
+                     "FROM books WHERE is_deleted = 0 GROUP BY category ORDER BY cnt DESC";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                String cat = rs.getString("cat");
+                if (cat == null || cat.isBlank()) cat = "General";
+                map.put(cat, rs.getInt("cnt"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+
     public boolean isIsbnExists(String isbn, int excludeBookId) {
-        String sql = "SELECT 1 FROM books WHERE isbn = ? AND id != ?";
+        String sql = "SELECT 1 FROM books WHERE isbn = ? AND id != ? AND is_deleted = 0";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, isbn);

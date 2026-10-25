@@ -3,97 +3,175 @@
 <%
     Student student = (Student) session.getAttribute("studentUser");
     if (student == null) {
-        response.sendRedirect(request.getContextPath() + "/jsp/student-login.jsp");
+        response.sendRedirect(request.getContextPath() + "/StudentLoginServlet");
         return;
     }
+    String initial = student.getName() != null && !student.getName().isEmpty()
+        ? student.getName().substring(0, 1).toUpperCase() : "S";
 %>
 <jsp:include page="includes/header.jsp" />
 <jsp:include page="includes/student-navbar.jsp" />
 
-<div class="main-content bg-light">
-    <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold"><i class="fas fa-user-circle me-2 text-primary"></i>My Profile</h3>
-            <a href="<%= request.getContextPath() %>/StudentDashboardServlet" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Back</a>
+<main class="page-content py-4">
+
+    <!-- Page Header -->
+    <header class="page-header">
+        <div>
+            <h1 class="page-title">Profile &amp; Security</h1>
+            <p class="page-subtitle">Inspect registered institutional records and update your account password.</p>
         </div>
+        <div class="page-header-actions">
+            <a href="<%= request.getContextPath() %>/StudentDashboardServlet" class="btn-lib-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Dashboard
+            </a>
+        </div>
+    </header>
 
-        <% String successMessage = (String) request.getAttribute("successMessage"); %>
-        <% String errorMessage = (String) request.getAttribute("errorMessage"); %>
-        <% if (successMessage != null) { %>
-            <div class="alert alert-success shadow-sm"><i class="fas fa-check-circle me-2"></i><%= successMessage %></div>
-        <% } %>
-        <% if (errorMessage != null) { %>
-            <div class="alert alert-danger shadow-sm"><i class="fas fa-exclamation-circle me-2"></i><%= errorMessage %></div>
-        <% } %>
+    <% String successMessage = (String) request.getAttribute("successMessage"); %>
+    <% String errorMessage = (String) request.getAttribute("errorMessage"); %>
+    <% if (successMessage != null && !successMessage.isEmpty()) { %>
+        <div class="alert alert-success mb-4" role="alert">
+            <i class="fas fa-check-circle me-2"></i><%= successMessage %>
+        </div>
+    <% } %>
+    <% if (errorMessage != null && !errorMessage.isEmpty()) { %>
+        <div class="alert alert-danger mb-4" role="alert">
+            <i class="fas fa-circle-exclamation me-2"></i><%= errorMessage %>
+        </div>
+    <% } %>
 
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="glass-card text-center p-4">
+    <div class="row g-4">
+        <!-- Student Identity Summary Card -->
+        <div class="col-lg-4">
+            <div class="panel text-center">
+                <div class="panel-body py-4">
                     <div class="mb-3">
-                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center shadow" style="width: 100px; height: 100px; font-size: 40px;">
-                            <%= student.getName().substring(0, 1).toUpperCase() %>
+                        <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-1 fw-bold border"
+                             style="width: 72px; height: 72px; font-size: 2rem;">
+                            <%= initial %>
                         </div>
                     </div>
-                    <h4 class="fw-bold mb-1"><%= student.getName() %></h4>
-                    <p class="text-muted"><%= student.getEmail() %></p>
-                    <hr>
-                    <div class="text-start">
-                        <p class="mb-2"><strong>Member Since:</strong> 2026</p>
-                        <p class="mb-2"><strong>Status:</strong> <span class="badge bg-success">Active</span></p>
+                    <h2 class="h5 fw-bold mb-1"><%= student.getName() %></h2>
+                    <p class="text-muted small mb-3"><%= student.getEmail() %></p>
+
+                    <div class="border-top pt-3 text-start small">
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted">Membership ID:</span>
+                            <span class="fw-bold font-monospace">#STUD-<%= student.getId() %></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted">Account Status:</span>
+                            <span class="badge-status badge-success">Active Member</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted">Course:</span>
+                            <span class="fw-semibold"><%= student.getCourse() != null ? student.getCourse() : "N/A" %></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2">
+                            <span class="text-muted">Academic Year:</span>
+                            <span class="fw-semibold"><%= student.getYear() != null ? student.getYear() : "N/A" %> Year</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Details & Security Forms -->
+        <div class="col-lg-8">
+            <!-- Academic Record Panel -->
+            <div class="panel mb-4">
+                <div class="panel-header">
+                    <h2 class="panel-title">Institutional Registration Details</h2>
+                    <span class="badge-status badge-neutral">Institutional Record</span>
+                </div>
+                <div class="panel-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Full Legal Name</label>
+                            <div class="form-control bg-light py-2"><%= student.getName() %></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Institutional Email</label>
+                            <div class="form-control bg-light py-2"><%= student.getEmail() %></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Contact Phone Number</label>
+                            <div class="form-control bg-light py-2"><%= student.getMobile() != null && !student.getMobile().isBlank() ? student.getMobile() : "Not provided" %></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Course / Degree Program</label>
+                            <div class="form-control bg-light py-2"><%= student.getCourse() != null ? student.getCourse() : "N/A" %> (<%= student.getYear() != null ? student.getYear() : "" %> Year)</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Assigned Class Section</label>
+                            <div class="form-control bg-light py-2"><%= student.getSection() != null ? student.getSection() : "A" %></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Residential Mailing Address</label>
+                            <div class="form-control bg-light py-2"><%= student.getAddress() != null && !student.getAddress().isBlank() ? student.getAddress() : "N/A" %></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-8">
-                <div class="glass-card p-4 mb-4">
-                    <h5 class="fw-bold mb-4"><i class="fas fa-info-circle me-2 text-info"></i>Personal Information</h5>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label text-muted small fw-bold">Full Name</label>
-                            <p class="border-bottom pb-2 fs-5"><%= student.getName() %></p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-muted small fw-bold">Email Address</label>
-                            <p class="border-bottom pb-2 fs-5"><%= student.getEmail() %></p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-muted small fw-bold">Mobile Number</label>
-                            <p class="border-bottom pb-2 fs-5"><%= student.getMobile() != null ? student.getMobile() : "N/A" %></p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-muted small fw-bold">Course & Year</label>
-                            <p class="border-bottom pb-2 fs-5"><%= student.getCourse() %> (<%= student.getYear() %> Year)</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-muted small fw-bold">Section</label>
-                            <p class="border-bottom pb-2 fs-5"><%= student.getSection() != null ? student.getSection() : "A" %></p>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label text-muted small fw-bold">Address</label>
-                            <p class="border-bottom pb-2 fs-5"><%= student.getAddress() != null ? student.getAddress() : "N/A" %></p>
-                        </div>
-                    </div>
+            <!-- Password Update Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Update Password</h2>
                 </div>
+                <div class="panel-body">
+                    <form action="<%= request.getContextPath() %>/StudentProfileServlet" method="post" onsubmit="return validatePasswordForm();">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="newPassword" class="form-label">New Password <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" id="newPassword" name="newPassword" class="form-control" required placeholder="Minimum 6 characters" autocomplete="new-password">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="confirmPassword" class="form-label">Confirm New Password <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-shield-check"></i></span>
+                                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required placeholder="Re-type new password" autocomplete="new-password">
+                                </div>
+                            </div>
+                        </div>
 
-                <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-4"><i class="fas fa-lock me-2 text-warning"></i>Security Settings</h5>
-                    <form action="<%= request.getContextPath() %>/StudentProfileServlet" method="post" class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">New Password</label>
-                            <input type="password" name="newPassword" class="form-control" placeholder="Leave blank to keep current">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Confirm New Password</label>
-                            <input type="password" name="confirmPassword" class="form-control" placeholder="Confirm your new password">
-                        </div>
-                        <div class="col-12 mt-3">
-                            <button type="submit" class="btn btn-warning fw-bold px-4 shadow-sm">Update Security Info</button>
+                        <div class="mt-4 pt-3 border-top">
+                            <button type="submit" class="btn-lib-primary px-4">
+                                <i class="fas fa-check me-1"></i> Update Account Password
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
+</main>
+
+<footer class="site-footer">
+    <div class="container-xl d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span>&copy; Library Management System &bull; Academic Operations Platform</span>
+        <span class="text-muted small">Student Profile</span>
+    </div>
+</footer>
+
+<script>
+function validatePasswordForm() {
+    const p1 = document.getElementById('newPassword').value;
+    const p2 = document.getElementById('confirmPassword').value;
+    if (p1.length < 6) {
+        sweetConfirm('Weak Password', 'Password must be at least 6 characters long.', 'OK', function() {});
+        return false;
+    }
+    if (p1 !== p2) {
+        sweetConfirm('Passwords Mismatch', 'New password and confirm password do not match.', 'OK', function() {});
+        return false;
+    }
+    return true;
+}
+</script>
 
 <jsp:include page="includes/footer.jsp" />

@@ -1,94 +1,271 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%
     if (session.getAttribute("adminUser") == null) {
-        response.sendRedirect(request.getContextPath() + "/jsp/login.jsp");
+        response.sendRedirect(request.getContextPath() + "/LoginServlet");
         return;
     }
+    Object totalBooks    = request.getAttribute("totalBooks");
+    Object totalQty      = request.getAttribute("totalQuantity");
+    Object lowStock      = request.getAttribute("lowStock");
+    Object totalStudents = request.getAttribute("totalStudents");
+    Object totalIssued   = request.getAttribute("totalIssued");
+    Integer pendingReqs  = (Integer) request.getAttribute("pendingRequests");
+    int pendingCount     = pendingReqs == null ? 0 : pendingReqs;
+    String adminName     = session.getAttribute("adminUser") != null ? session.getAttribute("adminUser").toString() : "Admin";
 %>
 <jsp:include page="includes/header.jsp" />
 <jsp:include page="includes/admin-navbar.jsp" />
 
-<div class="main-content bg-light">
-    <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold text-dark"><i class="fas fa-chart-line me-2 text-primary"></i>Admin Dashboard</h2>
-            <div class="text-muted">Welcome, Admin!</div>
-        </div>
+<div class="page-content">
 
-        <div class="row g-4 mb-5">
-            <div class="col-md-3">
-                <div class="stat-card bg-gradient-primary">
-                    <i class="fas fa-book icon"></i>
-                    <h6 class="text-uppercase fw-bold mb-2">Total Books</h6>
-                    <h2 class="display-5 fw-bold mb-0"><%= request.getAttribute("totalBooks") != null ? request.getAttribute("totalBooks") : "0" %></h2>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card bg-gradient-success">
-                    <i class="fas fa-layer-group icon"></i>
-                    <h6 class="text-uppercase fw-bold mb-2">Total Quantity</h6>
-                    <h2 class="display-5 fw-bold mb-0"><%= request.getAttribute("totalQuantity") != null ? request.getAttribute("totalQuantity") : "0" %></h2>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card bg-gradient-warning">
-                    <i class="fas fa-exclamation-triangle icon"></i>
-                    <h6 class="text-uppercase fw-bold mb-2">Low Stock (≤ 2)</h6>
-                    <h2 class="display-5 fw-bold mb-0"><%= request.getAttribute("lowStock") != null ? request.getAttribute("lowStock") : "0" %></h2>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card bg-gradient-info">
-                    <i class="fas fa-bell icon"></i>
-                    <h6 class="text-uppercase fw-bold mb-2">Pending Requests</h6>
-                    <% Integer pendingRequests = (Integer) request.getAttribute("pendingRequests");
-                       int pendingCount = pendingRequests == null ? 0 : pendingRequests; %>
-                    <h2 class="display-5 fw-bold mb-0"><%= pendingCount %></h2>
-                </div>
+    <!-- Page Header -->
+    <header class="page-header">
+        <div>
+            <h1 class="page-title">Library Overview</h1>
+            <p class="page-subtitle">Welcome back, <%= adminName %>. Real-time circulation status and catalog metrics.</p>
+        </div>
+        <div class="page-header-actions">
+            <a href="<%= request.getContextPath() %>/ExportBooksServlet" class="btn-lib-secondary">
+                <i class="fas fa-file-csv text-success"></i> Export Catalog (CSV)
+            </a>
+            <a href="<%= request.getContextPath() %>/AddBookServlet" class="btn-lib-primary">
+                <i class="fas fa-plus"></i> Add New Book
+            </a>
+        </div>
+    </header>
+
+    <% if (pendingCount > 0) { %>
+    <!-- Actionable Alert for Pending Requests -->
+    <div class="alert alert-warning d-flex justify-content-between align-items-center mb-4" role="alert">
+        <div>
+            <i class="fas fa-bell me-2"></i>
+            There <%= pendingCount == 1 ? "is" : "are" %> <strong><%= pendingCount %> pending student book request<%= pendingCount > 1 ? "s" : "" %></strong> awaiting librarian review.
+        </div>
+        <a href="<%= request.getContextPath() %>/AdminBookRequestsServlet" class="btn-lib-primary btn-sm">
+            Review Requests <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+    </div>
+    <% } %>
+
+    <!-- Real Metrics Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-label">Catalog Titles</div>
+                <div class="metric-value"><%= totalBooks != null ? totalBooks : "0" %></div>
+                <div class="metric-sub"><i class="fas fa-book me-1"></i> Unique catalog entries</div>
             </div>
         </div>
-
-        <h4 class="fw-bold mb-3">Quick Actions</h4>
-        <div class="row g-3">
-            <div class="col-md-2 col-sm-4 col-6">
-                <a href="<%= request.getContextPath() %>/AddBookServlet" class="btn btn-outline-primary w-100 py-3 rounded-3 shadow-sm d-flex flex-column align-items-center h-100 justify-content-center">
-                    <i class="fas fa-plus-circle fa-2x mb-2"></i>
-                    <span class="fw-bold">Add Book</span>
-                </a>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-label">Physical Copies</div>
+                <div class="metric-value"><%= totalQty != null ? totalQty : "0" %></div>
+                <div class="metric-sub"><i class="fas fa-cubes me-1"></i> Total volumes in stock</div>
             </div>
-            <div class="col-md-2 col-sm-4 col-6">
-                <a href="<%= request.getContextPath() %>/ViewBooksServlet" class="btn btn-outline-success w-100 py-3 rounded-3 shadow-sm d-flex flex-column align-items-center h-100 justify-content-center">
-                    <i class="fas fa-list fa-2x mb-2"></i>
-                    <span class="fw-bold">View Books</span>
-                </a>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-label">Currently Issued</div>
+                <div class="metric-value"><%= totalIssued != null ? totalIssued : "0" %></div>
+                <div class="metric-sub"><i class="fas fa-arrow-right-arrow-left me-1"></i> Active student loans</div>
             </div>
-            <div class="col-md-2 col-sm-4 col-6">
-                <a href="<%= request.getContextPath() %>/IssueBookServlet" class="btn btn-outline-warning w-100 py-3 rounded-3 shadow-sm d-flex flex-column align-items-center h-100 justify-content-center">
-                    <i class="fas fa-hand-holding fa-2x mb-2"></i>
-                    <span class="fw-bold">Issue Book</span>
-                </a>
-            </div>
-            <div class="col-md-2 col-sm-4 col-6">
-                <a href="<%= request.getContextPath() %>/ReturnBookServlet" class="btn btn-outline-info w-100 py-3 rounded-3 shadow-sm d-flex flex-column align-items-center h-100 justify-content-center">
-                    <i class="fas fa-undo fa-2x mb-2"></i>
-                    <span class="fw-bold">Return Book</span>
-                </a>
-            </div>
-            <div class="col-md-2 col-sm-4 col-6">
-                <a href="<%= request.getContextPath() %>/AdminBookRequestsServlet" class="btn btn-outline-secondary w-100 py-3 rounded-3 shadow-sm d-flex flex-column align-items-center h-100 justify-content-center">
-                    <i class="fas fa-bell fa-2x mb-2"></i>
-                    <span class="fw-bold">Requests
-                    <% if (pendingCount > 0) { %><span class="badge bg-danger ms-1 rounded-pill"><%= pendingCount %></span><% } %></span>
-                </a>
-            </div>
-            <div class="col-md-2 col-sm-4 col-6">
-                <a href="<%= request.getContextPath() %>/FineSettingsServlet" class="btn btn-outline-dark w-100 py-3 rounded-3 shadow-sm d-flex flex-column align-items-center h-100 justify-content-center">
-                    <i class="fas fa-cog fa-2x mb-2"></i>
-                    <span class="fw-bold">Fine Settings</span>
-                </a>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-label">Registered Students</div>
+                <div class="metric-value"><%= totalStudents != null ? totalStudents : "0" %></div>
+                <div class="metric-sub"><i class="fas fa-user-graduate me-1"></i> Authorized borrowers</div>
             </div>
         </div>
     </div>
-</div>
 
+    <!-- Charts Section -->
+    <%
+        java.util.Map<String, Integer> catDist = (java.util.Map<String, Integer>) request.getAttribute("categoryDistribution");
+        java.util.Map<String, Integer> trends = (java.util.Map<String, Integer>) request.getAttribute("borrowingTrends");
+    %>
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="panel h-100 mb-0">
+                <div class="panel-header">
+                    <h2 class="panel-title">Borrowing Activity Trends</h2>
+                    <span class="badge-status badge-neutral">Past 7 Days</span>
+                </div>
+                <div class="panel-body">
+                    <div style="position:relative; height: 260px;">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="panel h-100 mb-0">
+                <div class="panel-header">
+                    <h2 class="panel-title">Collection by Category</h2>
+                    <span class="badge-status badge-neutral">Distribution</span>
+                </div>
+                <div class="panel-body">
+                    <div style="position:relative; height: 260px; display:flex; align-items:center; justify-content:center;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Panel -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Frequent Operational Tasks</h2>
+        </div>
+        <div class="panel-body">
+            <div class="row g-3">
+                <div class="col-6 col-md-4 col-xl-2">
+                    <a href="<%= request.getContextPath() %>/ViewBooksServlet" class="btn-lib-secondary w-100 d-flex flex-column align-items-center py-3 text-center gap-2">
+                        <i class="fas fa-book fa-lg text-primary"></i>
+                        <span class="small fw-semibold">View Catalog</span>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <a href="<%= request.getContextPath() %>/AddBookServlet" class="btn-lib-secondary w-100 d-flex flex-column align-items-center py-3 text-center gap-2">
+                        <i class="fas fa-plus fa-lg text-primary"></i>
+                        <span class="small fw-semibold">Add Book</span>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <a href="<%= request.getContextPath() %>/IssueBookServlet" class="btn-lib-secondary w-100 d-flex flex-column align-items-center py-3 text-center gap-2">
+                        <i class="fas fa-arrow-right-arrow-left fa-lg text-warning"></i>
+                        <span class="small fw-semibold">Issue Book</span>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <a href="<%= request.getContextPath() %>/ReturnBookServlet" class="btn-lib-secondary w-100 d-flex flex-column align-items-center py-3 text-center gap-2">
+                        <i class="fas fa-rotate-left fa-lg text-info"></i>
+                        <span class="small fw-semibold">Return Book</span>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <a href="<%= request.getContextPath() %>/AdminBookRequestsServlet" class="btn-lib-secondary w-100 d-flex flex-column align-items-center py-3 text-center gap-2 position-relative">
+                        <i class="fas fa-inbox fa-lg text-danger"></i>
+                        <span class="small fw-semibold">Book Requests</span>
+                        <% if (pendingCount > 0) { %>
+                            <span class="badge-status badge-danger position-absolute top-0 end-0 mt-2 me-2" style="font-size:10px;"><%= pendingCount %></span>
+                        <% } %>
+                    </a>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <a href="<%= request.getContextPath() %>/FineSettingsServlet" class="btn-lib-secondary w-100 d-flex flex-column align-items-center py-3 text-center gap-2">
+                        <i class="fas fa-receipt fa-lg" style="color:var(--color-warning);"></i>
+                        <span class="small fw-semibold">Fine Settings</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /.page-content -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Borrowing Activity Trend Chart
+    const trendCtx = document.getElementById('trendChart');
+    if (trendCtx) {
+        <%
+            StringBuilder trendL = new StringBuilder();
+            StringBuilder trendV = new StringBuilder();
+            if (trends != null && !trends.isEmpty()) {
+                for (java.util.Map.Entry<String, Integer> e : trends.entrySet()) {
+                    if (trendL.length() > 0) { trendL.append(","); trendV.append(","); }
+                    trendL.append("\"").append(e.getKey()).append("\"");
+                    trendV.append(e.getValue());
+                }
+            } else {
+                trendL.append("\"Day 1\",\"Day 2\",\"Day 3\",\"Day 4\",\"Day 5\",\"Day 6\",\"Today\"");
+                trendV.append("0,0,0,0,0,0,0");
+            }
+        %>
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: [<%= trendL.toString() %>],
+                datasets: [{
+                    label: 'Books Issued',
+                    data: [<%= trendV.toString() %>],
+                    borderColor: '#283f7d',
+                    backgroundColor: 'rgba(40, 63, 125, 0.08)',
+                    fill: true,
+                    tension: 0.25,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#ec633d',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, precision: 0, color: '#595959', font: { family: "'Geist Mono', monospace", size: 11 } },
+                        grid: { color: 'rgba(55, 55, 55, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#595959', font: { family: "'Geist Mono', monospace", size: 11 } },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Category Donut Chart with Illoca Palette
+    const catCtx = document.getElementById('categoryChart');
+    if (catCtx) {
+        <%
+            StringBuilder catL = new StringBuilder();
+            StringBuilder catV = new StringBuilder();
+            if (catDist != null && !catDist.isEmpty()) {
+                for (java.util.Map.Entry<String, Integer> e : catDist.entrySet()) {
+                    if (catL.length() > 0) { catL.append(","); catV.append(","); }
+                    catL.append("\"").append(e.getKey()).append("\"");
+                    catV.append(e.getValue());
+                }
+            } else {
+                catL.append("\"General\"");
+                catV.append("1");
+            }
+        %>
+        new Chart(catCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [<%= catL.toString() %>],
+                datasets: [{
+                    data: [<%= catV.toString() %>],
+                    backgroundColor: [
+                        '#283f7d', '#ec633d', '#1f6e43', '#945811', '#546387', '#373737', '#9aa0a6'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fffbf3'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, padding: 10, font: { family: "'Geist Mono', monospace", size: 11 }, color: '#212121' }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+});
+</script>
+
+<jsp:include page="includes/admin-footer.jsp" />
 <jsp:include page="includes/footer.jsp" />

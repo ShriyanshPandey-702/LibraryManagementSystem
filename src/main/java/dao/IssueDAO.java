@@ -14,6 +14,8 @@ import util.DBConnection;
 
 public class IssueDAO {
 
+    public static final int MAX_BORROW_LIMIT = 3;
+
     public static class IssueResult {
         private final boolean success;
         private final String message;
@@ -45,11 +47,12 @@ public class IssueDAO {
             return new IssueResult(false, "Due date is required.");
         }
 
-        String verifyBookSql = "SELECT id FROM books WHERE id=?";
+        String verifyBookSql = "SELECT id FROM books WHERE id=? AND is_deleted=0";
         String verifyStudentSql = "SELECT id FROM students WHERE id=?";
-        String reserveCopySql = "UPDATE books SET quantity = quantity - 1 WHERE id=? AND quantity > 0";
-        String insertSql = "INSERT INTO issue_books(book_id,student_id,student_name,student_contact,course,`year`,section,issue_date,due_date,fine,returned,status) "
-            + "VALUES(?,?,?,?,?,?,?,CURDATE(),?,0,0,'Issued')";
+        String countActiveSql = "SELECT COUNT(*) FROM issue_books WHERE student_id=? AND status='Issued'";
+        String reserveCopySql = "UPDATE books SET quantity = quantity - 1 WHERE id=? AND quantity > 0 AND is_deleted=0";
+        String insertSql = "INSERT INTO issue_books(book_id,student_id,student_name,student_contact,course,`year`,section,issue_date,due_date,fine,returned,status,fine_paid,renew_count) "
+            + "VALUES(?,?,?,?,?,?,?,CURDATE(),?,0,0,'Issued',0,0)";
 
         Date parsedDueDate;
         try {
@@ -72,7 +75,7 @@ public class IssueDAO {
                 try (ResultSet rs = ps1.executeQuery()) {
                     if (!rs.next()) {
                         con.rollback();
-                        return new IssueResult(false, "Selected book not found.");
+                        return new IssueResult(false, "Selected book not found or has been deleted.");
                     }
                 }
             }
@@ -84,6 +87,17 @@ public class IssueDAO {
                     if (!rs.next()) {
                         con.rollback();
                         return new IssueResult(false, "Selected student not found.");
+                    }
+                }
+            }
+
+            // Quota check: limit to MAX_BORROW_LIMIT active books
+            try (PreparedStatement psCount = con.prepareStatement(countActiveSql)) {
+                psCount.setInt(1, studentId);
+                try (ResultSet rsCount = psCount.executeQuery()) {
+                    if (rsCount.next() && rsCount.getInt(1) >= MAX_BORROW_LIMIT) {
+                        con.rollback();
+                        return new IssueResult(false, "Student has reached the maximum borrowing limit (" + MAX_BORROW_LIMIT + " books). Please return a book first.");
                     }
                 }
             }
@@ -300,7 +314,7 @@ public class IssueDAO {
     }
 
     public double getStudentTotalFine(int studentId) {
-        String sql = "SELECT id, due_date, return_date, fine, status FROM issue_books WHERE student_id = ?";
+        String sql = "SELECT id, due_date, return_date, fine, status, fine_paid FROM issue_books WHERE student_id = ? AND (fine_paid = 0 OR fine_paid IS NULL)";
         double totalFine = 0;
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -320,7 +334,7 @@ public class IssueDAO {
     public List<IssueRecord> getIssuesByStudentId(int studentId) {
         List<IssueRecord> list = new ArrayList<>();
 
-        String sql = "SELECT ib.id, ib.book_id, b.title, ib.student_name, ib.student_contact, ib.issue_date, ib.due_date, ib.return_date, ib.fine, ib.status "
+        String sql = "SELECT ib.id, ib.book_id, b.title, ib.student_name, ib.student_contact, ib.issue_date, ib.due_date, ib.return_date, ib.fine, ib.status, ib.fine_paid, ib.renew_count "
                 + "FROM issue_books ib JOIN books b ON ib.book_id = b.id "
                 + "WHERE ib.student_id = ? ORDER BY ib.id DESC";
 
@@ -345,6 +359,8 @@ public class IssueDAO {
                     String status = rs.getString("status");
                     record.setFine(calculateDynamicFine(rs.getDate("due_date"), rs.getDate("return_date"), status, rs.getDouble("fine"), finePerDay));
                     record.setStatus(status);
+                    record.setFinePaid(rs.getInt("fine_paid") == 1);
+                    record.setRenewCount(rs.getInt("renew_count"));
                     list.add(record);
                 }
             }
@@ -354,6 +370,82 @@ public class IssueDAO {
         }
 
         return list;
+    }
+
+    public IssueResult renewBook(int issueId, int studentId) {
+        String checkSql = "SELECT due_date, fine, renew_count, status FROM issue_books WHERE id = ? AND student_id = ?";
+        try (Connection con = DBConnection.getConnection()) {
+            double finePerDay = getFinePerDay(con);
+            Date dueDate = null;
+            int renewCount = 0;
+            String status = null;
+            double fine = 0;
+
+            try (PreparedStatement ps = con.prepareStatement(checkSql)) {
+                ps.setInt(1, issueId);
+                ps.setInt(2, studentId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        return new IssueResult(false, "Borrow record not found.");
+                    }
+                    dueDate = rs.getDate("due_date");
+                    renewCount = rs.getInt("renew_count");
+                    status = rs.getString("status");
+                    fine = calculateDynamicFine(dueDate, null, status, rs.getDouble("fine"), finePerDay);
+                }
+            }
+
+            if (!"Issued".equalsIgnoreCase(status)) {
+                return new IssueResult(false, "Only currently issued books can be renewed.");
+            }
+            if (renewCount >= 2) {
+                return new IssueResult(false, "Maximum renewals reached (2 renewals per issued book).");
+            }
+            if (fine > 0) {
+                return new IssueResult(false, "Cannot renew overdue books with outstanding fines. Please return the book.");
+            }
+
+            String updateSql = "UPDATE issue_books SET due_date = DATE_ADD(due_date, INTERVAL 7 DAY), renew_count = renew_count + 1 WHERE id = ?";
+            try (PreparedStatement ps = con.prepareStatement(updateSql)) {
+                ps.setInt(1, issueId);
+                if (ps.executeUpdate() > 0) {
+                    return new IssueResult(true, "Book successfully renewed (+7 days added to due date).");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new IssueResult(false, "Failed to renew book. Please try again.");
+    }
+
+    public boolean payFine(int issueId, int studentId) {
+        String sql = "UPDATE issue_books SET fine_paid = 1 WHERE id = ? AND student_id = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, issueId);
+            ps.setInt(2, studentId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public java.util.Map<String, Integer> getRecentBorrowingTrends() {
+        java.util.Map<String, Integer> trends = new java.util.LinkedHashMap<>();
+        String sql = "SELECT DATE_FORMAT(issue_date, '%b %d') as dt, COUNT(*) as cnt " +
+                     "FROM issue_books GROUP BY DATE_FORMAT(issue_date, '%b %d'), issue_date " +
+                     "ORDER BY issue_date ASC LIMIT 7";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                trends.put(rs.getString("dt"), rs.getInt("cnt"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return trends;
     }
 
     private double getFinePerDay(Connection con) {

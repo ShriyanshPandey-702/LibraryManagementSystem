@@ -1,50 +1,80 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <jsp:include page="includes/header.jsp" />
 
-<div class="container d-flex align-items-center justify-content-center min-vh-100">
-    <div class="glass-card" style="max-width: 450px; width: 100%;">
-        <div class="text-center mb-4">
-            <i class="fas fa-user-shield fa-3x text-primary mb-3"></i>
-            <h3 class="fw-bold">Admin Portal</h3>
-            <p class="text-muted">Login to manage the library</p>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-header-icon">
+                <i class="fas fa-shield-halved"></i>
+            </div>
+            <h1 class="auth-title">Administrator Sign In</h1>
+            <p class="auth-sub">Access catalog controls, circulation records, and configuration</p>
         </div>
 
         <% String successMessage = (String) request.getAttribute("successMessage"); %>
-        <% if (successMessage != null) { %>
-            <div class="alert alert-success shadow-sm"><i class="fas fa-check-circle me-2"></i><%= successMessage %></div>
+        <% if (successMessage != null && !successMessage.isEmpty()) { %>
+            <div class="alert alert-success mb-3" role="alert">
+                <i class="fas fa-check-circle me-2"></i><%= successMessage %>
+            </div>
         <% } %>
+
         <% String errorMessage = (String) request.getAttribute("errorMessage"); %>
-        <% if (errorMessage != null) { %>
-            <div class="alert alert-danger shadow-sm"><i class="fas fa-exclamation-circle me-2"></i><%= errorMessage %></div>
+        <% if (errorMessage != null && !errorMessage.isEmpty()) { %>
+            <div class="alert alert-danger mb-3" role="alert">
+                <i class="fas fa-circle-exclamation me-2"></i><%= errorMessage %>
+            </div>
         <% } %>
 
         <form action="<%= request.getContextPath() %>/LoginServlet" method="post">
             <div class="mb-3">
-                <label class="form-label fw-bold">Username</label>
+                <label for="adminUsername" class="form-label">Username</label>
                 <div class="input-group">
-                    <span class="input-group-text bg-white"><i class="fas fa-user text-muted"></i></span>
-                    <input type="text" class="form-control border-start-0" name="username" required placeholder="admin">
+                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                    <input type="text" id="adminUsername" name="username" class="form-control" required placeholder="admin" autocomplete="username">
                 </div>
             </div>
 
             <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <label class="form-label fw-bold mb-0">Password</label>
-                    <a href="<%= request.getContextPath() %>/ForgotPasswordServlet?userType=admin" class="small text-decoration-none">Forgot Password?</a>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label for="adminPassword" class="form-label mb-0">Password</label>
+                    <a href="<%= request.getContextPath() %>/ForgotPasswordServlet?userType=admin" class="small text-decoration-none">Forgot password?</a>
                 </div>
-                <div class="input-group mt-2">
-                    <span class="input-group-text bg-white"><i class="fas fa-lock text-muted"></i></span>
-                    <input type="password" class="form-control border-start-0" name="password" required placeholder="********">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                    <input type="password" id="adminPassword" name="password" class="form-control" required placeholder="Enter admin password" autocomplete="current-password">
+                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('adminPassword', this)" title="Show/hide password" aria-label="Toggle password visibility">
+                        <i class="fas fa-eye"></i>
+                    </button>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary-custom w-100 py-2 mb-3">Login Securely</button>
+            <button type="submit" class="btn-lib-primary w-100 py-2">
+                <i class="fas fa-right-to-bracket me-1"></i> Sign In to Console
+            </button>
         </form>
 
-        <div class="text-center mt-3 border-top pt-3">
-            <a href="<%= request.getContextPath() %>/" class="text-muted text-decoration-none small"><i class="fas fa-arrow-left me-1"></i> Back to Home</a>
+        <div class="auth-footer">
+            <a href="<%= request.getContextPath() %>/" class="text-decoration-none">
+                <i class="fas fa-arrow-left me-1"></i> Return to Homepage
+            </a>
         </div>
     </div>
 </div>
+
+<script>
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+</script>
 
 <jsp:include page="includes/footer.jsp" />

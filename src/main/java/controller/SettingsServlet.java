@@ -1,5 +1,6 @@
 package controller;
 
+import dao.StudentDAO;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -16,6 +17,9 @@ public class SettingsServlet extends HttpServlet {
             response.sendRedirect("LoginServlet");
             return;
         }
+        StudentDAO studentDAO = new StudentDAO();
+        request.setAttribute("students", studentDAO.getAllStudents());
+        request.setAttribute("totalStudents", studentDAO.countStudents());
         request.getRequestDispatcher("jsp/settings.jsp").forward(request, response);
     }
 }

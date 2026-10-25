@@ -3,107 +3,180 @@
 <%@ page import="model.Book" %>
 <%
     if (session.getAttribute("adminUser") == null) {
-        response.sendRedirect(request.getContextPath() + "/jsp/login.jsp");
+        response.sendRedirect(request.getContextPath() + "/LoginServlet");
         return;
     }
+    List<Book> books = (List<Book>) request.getAttribute("books");
+    String keyword = request.getParameter("keyword");
+    int totalCount = books != null ? books.size() : 0;
 %>
 <jsp:include page="includes/header.jsp" />
 <jsp:include page="includes/admin-navbar.jsp" />
 
-<div class="main-content bg-light">
-    <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold"><i class="fas fa-book-open me-2 text-primary"></i>Library Catalog</h3>
-            <a href="<%= request.getContextPath() %>/AddBookServlet" class="btn btn-primary-custom"><i class="fas fa-plus me-1"></i>Add Book</a>
-        </div>
+<div class="page-content">
 
-        <div class="glass-card mb-4 p-3">
+    <!-- Page Header -->
+    <header class="page-header">
+        <div>
+            <h1 class="page-title">Library Catalog</h1>
+            <p class="page-subtitle">Inspect, edit, and manage all physical titles in the collection.</p>
+        </div>
+        <div class="page-header-actions">
+            <a href="<%= request.getContextPath() %>/ExportBooksServlet" class="btn-lib-secondary">
+                <i class="fas fa-file-csv text-success"></i> Export CSV
+            </a>
+            <a href="<%= request.getContextPath() %>/AddBookServlet" class="btn-lib-primary">
+                <i class="fas fa-plus"></i> Add New Book
+            </a>
+        </div>
+    </header>
+
+    <% if ("1".equals(request.getParameter("deleted"))) { %>
+        <div class="alert alert-success mb-4" role="alert">
+            <i class="fas fa-check-circle me-2"></i> Book removed from active catalog successfully.
+        </div>
+    <% } %>
+
+    <!-- Search / Filter Panel -->
+    <div class="panel mb-4">
+        <div class="panel-body py-3">
             <form method="get" action="<%= request.getContextPath() %>/ViewBooksServlet" class="row g-2 align-items-center">
                 <div class="col-md-8">
                     <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
-                        <input type="text" name="keyword" class="form-control border-start-0" placeholder="Search by title, author, category or ISBN..." value="<%= request.getParameter("keyword") != null ? request.getParameter("keyword") : "" %>">
+                        <span class="input-group-text"><i class="fas fa-magnifying-glass"></i></span>
+                        <input type="text" name="keyword" class="form-control"
+                               placeholder="Search by title, author, category, or ISBN..."
+                               value="<%= keyword != null ? keyword : "" %>" aria-label="Search catalog">
                     </div>
                 </div>
                 <div class="col-md-2 d-grid">
-                    <button type="submit" class="btn btn-primary-custom"><i class="fas fa-search me-1"></i>Search</button>
+                    <button type="submit" class="btn-lib-primary">
+                        <i class="fas fa-magnifying-glass me-1"></i> Search
+                    </button>
                 </div>
                 <div class="col-md-2 d-grid">
-                    <a href="<%= request.getContextPath() %>/ViewBooksServlet" class="btn btn-light border"><i class="fas fa-sync-alt me-1"></i>Reset</a>
+                    <a href="<%= request.getContextPath() %>/ViewBooksServlet" class="btn-lib-secondary text-center">
+                        <i class="fas fa-rotate-left me-1"></i> Reset
+                    </a>
                 </div>
             </form>
         </div>
+    </div>
 
-        <div class="glass-card p-0 overflow-hidden">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th class="ps-3">ID</th>
-                            <th>Title</th>
-                            <th>Author</th>
-                            <th>Category</th>
-                            <th>ISBN</th>
-                            <th>Rack No</th>
-                            <th>Price</th>
-                            <th>Qty</th>
-                            <th class="text-end pe-3">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <%
-                            List<Book> books = (List<Book>) request.getAttribute("books");
-                            if (books != null && !books.isEmpty()) {
-                                for (Book book : books) {
-                                    boolean isLowStock = book.getQuantity() <= 2;
-                        %>
-                        <tr class="<%= isLowStock ? "table-warning" : "" %>">
-                            <td class="ps-3 fw-bold text-muted">#<%= book.getBookId() %></td>
-                            <td class="fw-bold"><%= book.getTitle() %></td>
-                            <td><%= book.getAuthor() %></td>
-                            <td><span class="badge bg-secondary"><%= book.getCategory() != null ? book.getCategory() : "N/A" %></span></td>
-                            <td class="text-muted small"><%= book.getIsbn() != null ? book.getIsbn() : "N/A" %></td>
-                            <td class="text-muted small"><%= book.getRackNo() != null ? book.getRackNo() : "N/A" %></td>
-                            <td class="fw-bold text-success">₹<%= String.format("%.2f", book.getPrice()) %></td>
-                            <td>
-                                <% if (isLowStock) { %>
-                                    <span class="badge bg-danger rounded-pill"><%= book.getQuantity() %> Left</span>
-                                <% } else { %>
-                                    <span class="badge bg-success rounded-pill"><%= book.getQuantity() %></span>
-                                <% } %>
-                            </td>
-                            <td class="text-end pe-3">
-                                <a href="<%= request.getContextPath() %>/EditBookServlet?id=<%= book.getBookId() %>" class="btn btn-sm btn-outline-primary shadow-sm" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="<%= request.getContextPath() %>/DeleteBookServlet?id=<%= book.getBookId() %>" class="btn btn-sm btn-outline-danger shadow-sm ms-1" title="Delete" onclick="return confirm('Are you sure you want to delete <%= book.getTitle() %>?')">
-                                    <i class="fas fa-trash-alt"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <%
-                                }
-                            } else {
-                        %>
-                        <tr>
-                            <td colspan="9" class="text-center py-5">
-                                <div class="text-muted">
-                                    <i class="fas fa-book-open fa-3x mb-3"></i>
-                                    <p class="mb-0 fs-5">No books found in the catalog.</p>
-                                </div>
-                            </td>
-                        </tr>
-                        <%
-                            }
-                        %>
-                    </tbody>
-                </table>
+    <!-- Catalog Table Panel -->
+    <div class="panel">
+        <div class="panel-header">
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="panel-title">Catalog Inventory</h2>
+                <span class="badge-status badge-neutral"><%= totalCount %> <%= totalCount == 1 ? "Book" : "Books" %></span>
             </div>
+            <% if (keyword != null && !keyword.trim().isEmpty()) { %>
+                <span class="text-muted small">Filtered by "<strong><%= keyword %></strong>"</span>
+            <% } %>
         </div>
-        <div class="mt-4">
-            <a href="<%= request.getContextPath() %>/DashboardServlet" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+
+        <div class="table-responsive">
+            <table class="table-lib mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">ID</th>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Category</th>
+                        <th>ISBN</th>
+                        <th>Rack</th>
+                        <th class="text-end">Price</th>
+                        <th class="text-center">Stock</th>
+                        <th class="text-end" style="width: 110px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <%
+                        if (books != null && !books.isEmpty()) {
+                            for (Book book : books) {
+                                boolean isLowStock = book.getQuantity() > 0 && book.getQuantity() <= 2;
+                                boolean outOfStock = book.getQuantity() <= 0;
+                    %>
+                    <tr>
+                        <td class="text-muted small">#<%= book.getBookId() %></td>
+                        <td>
+                            <strong class="text-dark"><%= book.getTitle() %></strong>
+                        </td>
+                        <td class="text-secondary"><%= book.getAuthor() %></td>
+                        <td>
+                            <span class="badge-status badge-neutral">
+                                <%= book.getCategory() != null && !book.getCategory().isEmpty() ? book.getCategory() : "General" %>
+                            </span>
+                        </td>
+                        <td class="text-muted font-monospace small"><%= book.getIsbn() != null ? book.getIsbn() : "—" %></td>
+                        <td class="text-muted small"><%= book.getRackNo() != null ? book.getRackNo() : "—" %></td>
+                        <td class="text-end fw-semibold">₹<%= String.format("%.2f", book.getPrice()) %></td>
+                        <td class="text-center">
+                            <% if (outOfStock) { %>
+                                <span class="badge-status badge-danger">Out of stock</span>
+                            <% } else if (isLowStock) { %>
+                                <span class="badge-status badge-warning"><%= book.getQuantity() %> left</span>
+                            <% } else { %>
+                                <span class="badge-status badge-success"><%= book.getQuantity() %> copies</span>
+                            <% } %>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1">
+                                <a href="<%= request.getContextPath() %>/EditBookServlet?id=<%= book.getBookId() %>"
+                                   class="btn-icon" title="Edit book details" aria-label="Edit book #<%= book.getBookId() %>">
+                                    <i class="fas fa-pen-to-square"></i>
+                                </a>
+                                <form id="deleteForm-<%= book.getBookId() %>" action="<%= request.getContextPath() %>/DeleteBookServlet" method="post" class="d-inline m-0">
+                                    <input type="hidden" name="id" value="<%= book.getBookId() %>">
+                                    <button type="button" class="btn-icon text-danger" title="Remove book from active catalog" aria-label="Delete book #<%= book.getBookId() %>"
+                                            onclick="confirmDeleteBook(<%= book.getBookId() %>, '<%= book.getTitle().replace("'", "\\'") %>')">
+                                        <i class="fas fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <%
+                            }
+                        } else {
+                    %>
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">
+                                    <i class="fas fa-book-open"></i>
+                                </div>
+                                <h3 class="empty-state-title">No books found</h3>
+                                <p class="empty-state-text">
+                                    <%= keyword != null && !keyword.trim().isEmpty() ? "No catalog titles match your search criteria." : "There are currently no active books registered in the catalog." %>
+                                </p>
+                                <% if (keyword != null && !keyword.trim().isEmpty()) { %>
+                                    <a href="<%= request.getContextPath() %>/ViewBooksServlet" class="btn-lib-secondary btn-sm">
+                                        Clear Search
+                                    </a>
+                                <% } else { %>
+                                    <a href="<%= request.getContextPath() %>/AddBookServlet" class="btn-lib-primary btn-sm">
+                                        <i class="fas fa-plus me-1"></i> Add First Book
+                                    </a>
+                                <% } %>
+                            </div>
+                        </td>
+                    </tr>
+                    <% } %>
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
 
+</div><!-- /.page-content -->
+
+<script>
+function confirmDeleteBook(id, title) {
+    sweetConfirm('Remove Book?', 'Are you sure you want to remove "' + title + '" from the active library catalog?', 'Yes, Remove', function() {
+        document.getElementById('deleteForm-' + id).submit();
+    });
+}
+</script>
+
+<jsp:include page="includes/admin-footer.jsp" />
 <jsp:include page="includes/footer.jsp" />

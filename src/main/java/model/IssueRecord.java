@@ -14,6 +14,8 @@ public class IssueRecord {
     private Date returnDate;
     private double fine;
     private String status;
+    private boolean finePaid;
+    private int renewCount;
 
     public int getIssueId() {
         return issueId;
@@ -93,5 +95,21 @@ public class IssueRecord {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public boolean isFinePaid() {
+        return finePaid;
+    }
+
+    public void setFinePaid(boolean finePaid) {
+        this.finePaid = finePaid;
+    }
+
+    public int getRenewCount() {
+        return renewCount;
+    }
+
+    public void setRenewCount(int renewCount) {
+        this.renewCount = renewCount;
     }
 }

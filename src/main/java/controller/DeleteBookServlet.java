@@ -17,9 +17,19 @@ public class DeleteBookServlet extends HttpServlet {
     private final BookDAO bookDAO = new BookDAO();
 
     @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        handleDelete(request, response);
+    }
+
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        handleDelete(request, response);
+    }
 
+    private void handleDelete(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("adminUser") == null) {
             if (session != null && session.getAttribute("studentUser") != null) {
@@ -31,7 +41,6 @@ public class DeleteBookServlet extends HttpServlet {
         }
 
         String idParam = request.getParameter("id");
-
         try {
             int id = Integer.parseInt(idParam);
             bookDAO.deleteBook(id);
@@ -39,6 +48,6 @@ public class DeleteBookServlet extends HttpServlet {
             e.printStackTrace();
         }
 
-        response.sendRedirect("ViewBooksServlet");
+        response.sendRedirect("ViewBooksServlet?deleted=1");
     }
 }
