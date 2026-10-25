@@ -33,15 +33,33 @@ public class ViewBooksServlet extends HttpServlet {
         }
 
         String keyword = request.getParameter("keyword");
-        List<Book> books;
+        String category = request.getParameter("category");
+        String availability = request.getParameter("availability");
+        String sortBy = request.getParameter("sortBy");
+        String ratingParam = request.getParameter("minRating");
+        String yearParam = request.getParameter("year");
 
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            books = bookDAO.searchBooks(keyword.trim());
-        } else {
-            books = bookDAO.getAllBooks();
+        Integer minRating = null;
+        if (ratingParam != null && !ratingParam.trim().isEmpty()) {
+            try { minRating = Integer.parseInt(ratingParam.trim()); } catch (Exception ignored) {}
         }
 
+        Integer year = null;
+        if (yearParam != null && !yearParam.trim().isEmpty()) {
+            try { year = Integer.parseInt(yearParam.trim()); } catch (Exception ignored) {}
+        }
+
+        List<Book> books = bookDAO.searchBooksAdvanced(keyword, category, availability, minRating, year, sortBy, 0, 500);
+
         request.setAttribute("books", books);
+        request.setAttribute("categories", bookDAO.getAllCategories());
+        request.setAttribute("keyword", keyword != null ? keyword : "");
+        request.setAttribute("category", category != null ? category : "ALL");
+        request.setAttribute("availability", availability != null ? availability : "all");
+        request.setAttribute("sortBy", sortBy != null ? sortBy : "recent");
+        request.setAttribute("minRating", minRating);
+        request.setAttribute("year", year);
+
         request.getRequestDispatcher("jsp/view-books.jsp").forward(request, response);
     }
 }

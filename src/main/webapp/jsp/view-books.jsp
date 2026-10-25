@@ -37,26 +37,69 @@
         </div>
     <% } %>
 
-    <!-- Search / Filter Panel -->
+    <!-- Advanced Search / Filter Panel -->
     <div class="panel mb-4">
+        <div class="panel-header py-2 d-flex justify-content-between align-items-center">
+            <span class="font-mono small text-muted">// ADVANCED CATALOG SEARCH &amp; FILTERS</span>
+            <span class="text-muted small"><%= totalCount %> <%= totalCount == 1 ? "Record" : "Records" %></span>
+        </div>
         <div class="panel-body py-3">
-            <form method="get" action="<%= request.getContextPath() %>/ViewBooksServlet" class="row g-2 align-items-center">
-                <div class="col-md-8">
+            <form method="get" action="<%= request.getContextPath() %>/ViewBooksServlet" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label font-mono small mb-1">// KEYWORD</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-magnifying-glass"></i></span>
                         <input type="text" name="keyword" class="form-control"
-                               placeholder="Search by title, author, category, or ISBN..."
-                               value="<%= keyword != null ? keyword : "" %>" aria-label="Search catalog">
+                               placeholder="Title, author, ISBN, desc..."
+                               value="<%= keyword != null ? keyword : "" %>">
                     </div>
                 </div>
-                <div class="col-md-2 d-grid">
-                    <button type="submit" class="btn-lib-primary">
-                        <i class="fas fa-magnifying-glass me-1"></i> Search
-                    </button>
+
+                <div class="col-md-2">
+                    <label class="form-label font-mono small mb-1">// CATEGORY</label>
+                    <select name="category" class="form-select">
+                        <option value="ALL">All Categories</option>
+                        <%
+                            List<String> categories = (List<String>) request.getAttribute("categories");
+                            String selectedCat = (String) request.getAttribute("category");
+                            if (categories != null) {
+                                for (String c : categories) {
+                        %>
+                        <option value="<%= c %>" <%= c.equalsIgnoreCase(selectedCat) ? "selected" : "" %>><%= c %></option>
+                        <%      }
+                            }
+                        %>
+                    </select>
                 </div>
-                <div class="col-md-2 d-grid">
-                    <a href="<%= request.getContextPath() %>/ViewBooksServlet" class="btn-lib-secondary text-center">
-                        <i class="fas fa-rotate-left me-1"></i> Reset
+
+                <div class="col-md-2">
+                    <label class="form-label font-mono small mb-1">// AVAILABILITY</label>
+                    <% String selectedAvail = (String) request.getAttribute("availability"); %>
+                    <select name="availability" class="form-select">
+                        <option value="all" <%= "all".equalsIgnoreCase(selectedAvail) ? "selected" : "" %>>All Statuses</option>
+                        <option value="available" <%= "available".equalsIgnoreCase(selectedAvail) ? "selected" : "" %>>Available (>0)</option>
+                        <option value="out" <%= "out".equalsIgnoreCase(selectedAvail) ? "selected" : "" %>>Out of Stock (0)</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label font-mono small mb-1">// SORT BY</label>
+                    <% String selectedSort = (String) request.getAttribute("sortBy"); %>
+                    <select name="sortBy" class="form-select">
+                        <option value="recent" <%= "recent".equalsIgnoreCase(selectedSort) ? "selected" : "" %>>Recently Added</option>
+                        <option value="title" <%= "title".equalsIgnoreCase(selectedSort) ? "selected" : "" %>>Title (A–Z)</option>
+                        <option value="author" <%= "author".equalsIgnoreCase(selectedSort) ? "selected" : "" %>>Author (A–Z)</option>
+                        <option value="rating" <%= "rating".equalsIgnoreCase(selectedSort) ? "selected" : "" %>>Highest Rating</option>
+                        <option value="year" <%= "year".equalsIgnoreCase(selectedSort) ? "selected" : "" %>>Publication Year</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn-lib-primary flex-grow-1">
+                        <i class="fas fa-filter me-1"></i> Apply
+                    </button>
+                    <a href="<%= request.getContextPath() %>/ViewBooksServlet" class="btn-lib-secondary" title="Clear all filters">
+                        <i class="fas fa-rotate-left"></i>
                     </a>
                 </div>
             </form>
@@ -79,15 +122,15 @@
             <table class="table-lib mb-0">
                 <thead>
                     <tr>
-                        <th style="width: 70px;">ID</th>
-                        <th>Title</th>
+                        <th style="width: 50px;">Cover</th>
+                        <th>Book Title &amp; Details</th>
                         <th>Author</th>
                         <th>Category</th>
-                        <th>ISBN</th>
-                        <th>Rack</th>
+                        <th>ISBN / Shelf</th>
+                        <th class="text-center">Rating</th>
                         <th class="text-end">Price</th>
                         <th class="text-center">Stock</th>
-                        <th class="text-end" style="width: 110px;">Actions</th>
+                        <th class="text-end" style="width: 130px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -98,18 +141,48 @@
                                 boolean outOfStock = book.getQuantity() <= 0;
                     %>
                     <tr>
-                        <td class="text-muted small">#<%= book.getBookId() %></td>
                         <td>
-                            <strong class="text-dark"><%= book.getTitle() %></strong>
+                            <% if (book.getCoverImage() != null && !book.getCoverImage().trim().isEmpty()) { %>
+                                <img src="<%= request.getContextPath() %>/<%= book.getCoverImage() %>" alt="Cover" class="book-cover-thumb" style="width: 40px; height: 52px; object-fit: cover; border-radius: 4px; border: 1px solid var(--color-border);">
+                            <% } else { %>
+                                <div class="book-cover-placeholder" style="width: 40px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--color-border); border-radius: 4px; color: var(--color-ink-muted);">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                            <% } %>
                         </td>
-                        <td class="text-secondary"><%= book.getAuthor() %></td>
+                        <td>
+                            <strong class="book-title"><%= book.getTitle() %></strong>
+                            <div class="text-muted small">
+                                ID #<%= book.getBookId() %>
+                                <% if (book.getPublisher() != null && !book.getPublisher().trim().isEmpty()) { %>
+                                    &bull; <%= book.getPublisher() %>
+                                <% } %>
+                                <% if (book.getPublicationYear() != null && book.getPublicationYear() > 0) { %>
+                                    (<%= book.getPublicationYear() %>)
+                                <% } %>
+                            </div>
+                        </td>
+                        <td class="book-author"><%= book.getAuthor() %></td>
                         <td>
                             <span class="badge-status badge-neutral">
                                 <%= book.getCategory() != null && !book.getCategory().isEmpty() ? book.getCategory() : "General" %>
                             </span>
                         </td>
-                        <td class="text-muted font-monospace small"><%= book.getIsbn() != null ? book.getIsbn() : "—" %></td>
-                        <td class="text-muted small"><%= book.getRackNo() != null ? book.getRackNo() : "—" %></td>
+                        <td class="text-muted font-monospace small">
+                            <div><%= book.getIsbn() != null && !book.getIsbn().isEmpty() ? book.getIsbn() : "—" %></div>
+                            <div class="text-subtle"><%= book.getRackNo() != null && !book.getRackNo().isEmpty() ? "Rack: " + book.getRackNo() : "" %></div>
+                        </td>
+                        <td class="text-center">
+                            <% if (book.getReviewCount() > 0) { %>
+                                <div class="rating-stars text-accent" title="<%= String.format("%.1f", book.getAverageRating()) %> out of 5 stars">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <strong><%= String.format("%.1f", book.getAverageRating()) %></strong>
+                                    <span class="text-muted small">(<%= book.getReviewCount() %>)</span>
+                                </div>
+                            <% } else { %>
+                                <span class="text-muted small">—</span>
+                            <% } %>
+                        </td>
                         <td class="text-end fw-semibold">₹<%= String.format("%.2f", book.getPrice()) %></td>
                         <td class="text-center">
                             <% if (outOfStock) { %>
@@ -122,6 +195,10 @@
                         </td>
                         <td class="text-end">
                             <div class="d-inline-flex gap-1">
+                                <a href="<%= request.getContextPath() %>/AdminBookCopiesServlet?bookId=<%= book.getBookId() %>"
+                                   class="btn-icon" title="View physical copies &amp; barcodes" aria-label="Physical copies for #<%= book.getBookId() %>">
+                                    <i class="fas fa-barcode"></i>
+                                </a>
                                 <a href="<%= request.getContextPath() %>/EditBookServlet?id=<%= book.getBookId() %>"
                                    class="btn-icon" title="Edit book details" aria-label="Edit book #<%= book.getBookId() %>">
                                     <i class="fas fa-pen-to-square"></i>

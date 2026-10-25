@@ -9,6 +9,10 @@
     List<Student> students = (List<Student>) request.getAttribute("students");
     Object totalStudents = request.getAttribute("totalStudents");
     int count = students != null ? students.size() : 0;
+    dao.SettingsDAO settingsDAO = new dao.SettingsDAO();
+    int configuredMaxBooks = settingsDAO.getIntSetting("max_books_per_student", 5);
+    int configuredRenewalDays = settingsDAO.getIntSetting("renewal_days", 14);
+    double configuredDailyFine = settingsDAO.getDoubleSetting("fine_per_day", 10.0);
 %>
 <jsp:include page="includes/header.jsp" />
 <jsp:include page="includes/admin-navbar.jsp" />
@@ -23,7 +27,7 @@
         </div>
         <div class="page-header-actions">
             <a href="<%= request.getContextPath() %>/FineSettingsServlet" class="btn-lib-primary">
-                <i class="fas fa-receipt me-1"></i> Configure Fine Rate
+                <i class="fas fa-sliders me-1"></i> Edit Library Policies
             </a>
         </div>
     </header>
@@ -39,28 +43,28 @@
                 <div class="col-md-3">
                     <div class="p-3 border rounded-1 bg-light">
                         <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.72rem;">Borrowing Quota</div>
-                        <div class="h5 fw-bold text-dark mb-1">3 Books Max</div>
-                        <div class="text-muted small">Strictly enforced per student across all active loans.</div>
+                        <div class="h5 fw-bold mb-1"><%= configuredMaxBooks %> Books Max</div>
+                        <div class="text-muted small">Configurable per-student borrowing quota across all active loans.</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="p-3 border rounded-1 bg-light">
                         <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.72rem;">Loan Period</div>
-                        <div class="h5 fw-bold text-dark mb-1">7 Days</div>
+                        <div class="h5 fw-bold mb-1">7 Days</div>
                         <div class="text-muted small">Default checkout duration calculated from date of issue.</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="p-3 border rounded-1 bg-light">
-                        <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.72rem;">Renewal Eligibility</div>
-                        <div class="h5 fw-bold text-dark mb-1">Up to 2 Times</div>
-                        <div class="text-muted small">+7 days per extension; blocked if overdue fines exist.</div>
+                        <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.72rem;">Renewal Extension</div>
+                        <div class="h5 fw-bold mb-1">+<%= configuredRenewalDays %> Days</div>
+                        <div class="text-muted small">Configurable extension per renewal; blocked if overdue fines exist.</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="p-3 border rounded-1 bg-light">
                         <div class="text-muted small text-uppercase fw-bold mb-1" style="font-size: 0.72rem;">Security &amp; Hashing</div>
-                        <div class="h5 fw-bold text-dark mb-1">BCrypt Active</div>
+                        <div class="h5 fw-bold mb-1">BCrypt Active</div>
                         <div class="text-muted small">Cryptographic hash on all credentials; SQL injection protected.</div>
                     </div>
                 </div>

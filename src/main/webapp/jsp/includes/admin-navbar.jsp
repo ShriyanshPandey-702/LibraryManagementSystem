@@ -57,24 +57,28 @@
             <a href="<%= ctx %>/AdminBookRequestsServlet" class="sidebar-link <%= currentUri.contains("AdminBookRequestsServlet") ? "active" : "" %>">
                 <i class="fas fa-inbox"></i>
                 <span>Student Requests</span>
-                <%
-                    Object pending = session != null ? session.getAttribute("pendingRequestCount") : null;
-                    if (pending != null && (Integer) pending > 0) {
-                %>
-                    <span class="sidebar-badge"><%= pending %></span>
-                <% } %>
             </a>
 
-            <div class="sidebar-section-label">// 04 ADMINISTRATION</div>
+            <a href="<%= ctx %>/AdminReservationsServlet" class="sidebar-link <%= currentUri.contains("AdminReservationsServlet") ? "active" : "" %>">
+                <i class="fas fa-calendar-check"></i>
+                <span>Reservations &amp; Waitlist</span>
+            </a>
+
+            <a href="<%= ctx %>/AdminLostDamagedServlet" class="sidebar-link <%= currentUri.contains("AdminLostDamagedServlet") ? "active" : "" %>">
+                <i class="fas fa-triangle-exclamation"></i>
+                <span>Lost / Damaged Reports</span>
+            </a>
+
+            <div class="sidebar-section-label">// 04 CONFIGURATION</div>
 
             <a href="<%= ctx %>/FineSettingsServlet" class="sidebar-link <%= currentUri.contains("FineSettingsServlet") ? "active" : "" %>">
-                <i class="fas fa-receipt"></i>
-                <span>Fine Settings</span>
+                <i class="fas fa-sliders"></i>
+                <span>Library Policies</span>
             </a>
 
             <a href="<%= ctx %>/SettingsServlet" class="sidebar-link <%= currentUri.contains("SettingsServlet") ? "active" : "" %>">
-                <i class="fas fa-sliders"></i>
-                <span>System &amp; Students</span>
+                <i class="fas fa-users-gear"></i>
+                <span>Students Roster</span>
             </a>
 
         </nav>
@@ -96,15 +100,42 @@
     <!-- ── Main Area ────────────────────────────────────── -->
     <div class="main-area">
 
-        <!-- Mobile Top Bar -->
-        <header class="topbar-mobile">
-            <button id="sidebarToggle" class="btn-lib-secondary btn-sm" aria-label="Toggle navigation menu">
-                <i class="fas fa-bars"></i>
-            </button>
-            <span class="fw-semibold text-dark small">Admin Console</span>
-            <a href="<%= ctx %>/LogoutServlet" class="btn-lib-secondary btn-sm" title="Sign out" aria-label="Sign out">
-                <i class="fas fa-arrow-right-from-bracket"></i>
-            </a>
+        <!-- Top Utility Bar (Theme Toggle & Notifications) -->
+        <header class="topbar-utility px-4 py-2 border-bottom d-flex align-items-center justify-content-between" style="background-color: var(--color-surface);">
+            <div class="d-flex align-items-center gap-2">
+                <button id="sidebarToggle" class="btn-lib-secondary btn-sm d-md-none" aria-label="Toggle navigation menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <span class="font-mono text-muted small">// ADMIN OPERATIONS</span>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <!-- Theme Toggle Button -->
+                <button type="button" class="btn-theme-toggle" id="themeToggleBtn" aria-label="Toggle theme" title="Toggle Light / Dark mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+
+                <!-- Notifications Dropdown -->
+                <div class="notif-wrapper">
+                    <button type="button" class="notif-bell-btn" id="notifBellBtn" aria-label="View notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="notif-badge d-none" id="notifBadge">0</span>
+                    </button>
+                    <div class="notif-dropdown" id="notifDropdown">
+                        <div class="notif-header">
+                            <span>Notifications</span>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small" id="markAllReadBtn">Mark all as read</button>
+                        </div>
+                        <div id="notifList">
+                            <div class="p-3 text-center text-muted small">No notifications.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="<%= ctx %>/LogoutServlet" class="btn-lib-secondary btn-sm" title="Sign out" aria-label="Sign out">
+                    <i class="fas fa-arrow-right-from-bracket me-1"></i> Sign Out
+                </a>
+            </div>
         </header>
 
         <!-- Page content injected here -->

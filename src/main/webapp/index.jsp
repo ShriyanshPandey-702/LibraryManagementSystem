@@ -19,7 +19,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Geist+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <!-- Master Custom CSS -->
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css?v=2.2">
+    <script>
+        (function() {
+            const saved = localStorage.getItem('libris_theme');
+            if (saved) {
+                document.documentElement.setAttribute('data-theme', saved);
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
 </head>
 <body class="landing-body bg-grid">
 
@@ -31,6 +41,9 @@
                 <span class="landing-brand-text">libris<span style="color: var(--color-accent); font-weight: 700;">.</span></span>
             </a>
             <nav class="landing-nav-links" aria-label="Portal Navigation">
+                <button type="button" class="btn-theme-toggle" id="themeToggleBtn" aria-label="Toggle theme" title="Toggle Light / Dark mode">
+                    <i class="fas fa-moon"></i>
+                </button>
                 <% if (isAdminLoggedIn) { %>
                     <a href="${pageContext.request.contextPath}/DashboardServlet" class="btn-lib-primary btn-sm">
                         <i class="fas fa-gauge-high"></i> Admin Console
@@ -76,10 +89,6 @@
                         <% } else { %>
                             <a href="${pageContext.request.contextPath}/StudentLoginServlet" class="btn-lib-primary">
                                 Try for free
-                            </a>
-                            <a href="#portal-selection" class="button-demo">
-                                <span class="square"><i class="fas fa-chevron-right"></i></span>
-                                <span class="label">Watch the demo</span>
                             </a>
                         <% } %>
                     </div>
@@ -174,11 +183,11 @@
                         </div>
                         <div class="panel-body">
                             <p class="text-muted small mb-3">
-                                Manage book loans and returns with strict borrowing limits (up to 3 books per student) and automated due date tracking.
+                                Manage book loans and returns with flexible borrowing limits (configurable per student quota) and automated due date tracking.
                             </p>
                             <ul class="list-engineering">
-                                <li><i class="fas fa-check text-success"></i> 3-book limit enforcement</li>
-                                <li><i class="fas fa-check text-success"></i> 7-day self-service renewal</li>
+                                <li><i class="fas fa-check text-success"></i> Configurable borrowing limit enforcement</li>
+                                <li><i class="fas fa-check text-success"></i> Flexible self-service renewal</li>
                                 <li><i class="fas fa-check text-success"></i> Overdue alert calculations</li>
                             </ul>
                         </div>
@@ -223,5 +232,18 @@
 
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.getElementById('themeToggleBtn')?.addEventListener('click', function() {
+        const current = document.documentElement.getAttribute('data-theme');
+        const target = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', target);
+        localStorage.setItem('libris_theme', target);
+        this.innerHTML = target === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    });
+    if (document.documentElement.getAttribute('data-theme') === 'dark') {
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) btn.innerHTML = '<i class="fas fa-sun"></i>';
+    }
+    </script>
 </body>
 </html>

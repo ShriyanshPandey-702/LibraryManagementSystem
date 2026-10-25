@@ -59,7 +59,7 @@ public class IssueBookServlet extends HttpServlet {
         }
 
         if ("1".equals(request.getParameter("issued"))) {
-            request.setAttribute("successMessage", "Book issued successfully");
+            request.setAttribute("successMessage", "Book issue request created and sent to student for confirmation.");
         }
         request.getRequestDispatcher("jsp/issue-book.jsp").forward(request, response);
     }
@@ -119,7 +119,7 @@ public class IssueBookServlet extends HttpServlet {
             }
 
             IssueDAO.IssueResult issueResult = issueDAO.issueBookWithDetails(bookId, studentId, studentName, studentContact,
-                    course, year, section, dueDate);
+                    course, year, section, dueDate, requestId);
             if (issueResult.isSuccess()) {
                 if (requestId > 0) {
                     bookRequestDAO.markRequestApproved(requestId);

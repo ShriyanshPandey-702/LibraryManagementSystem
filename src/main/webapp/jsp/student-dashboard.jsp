@@ -27,8 +27,20 @@
         try { pendingRequests = Integer.parseInt(pObj.toString()); } catch (Exception ignored) {}
     }
 
-    int quotaMax = 3;
-    int quotaPct = Math.min(100, (int) Math.round(((double) borrowedCount / quotaMax) * 100));
+    int pendingConfirmations = 0;
+    Object pcObj = request.getAttribute("pendingConfirmations");
+    if (pcObj instanceof Integer) pendingConfirmations = (Integer) pcObj;
+    else if (pcObj != null) {
+        try { pendingConfirmations = Integer.parseInt(pcObj.toString()); } catch (Exception ignored) {}
+    }
+
+    int quotaMax = 5;
+    Object qObj = request.getAttribute("quotaMax");
+    if (qObj instanceof Integer) quotaMax = (Integer) qObj;
+    else {
+        quotaMax = new dao.IssueDAO().getMaxBorrowLimit();
+    }
+    int quotaPct = Math.min(100, (int) Math.round(((double) borrowedCount / Math.max(1, quotaMax)) * 100));
 %>
 <jsp:include page="includes/header.jsp" />
 <jsp:include page="includes/student-navbar.jsp" />
@@ -47,19 +59,42 @@
             </p>
         </div>
         <div class="page-header-actions">
+            <a href="<%= request.getContextPath() %>/StudentBorrowingHistoryServlet" class="btn-lib-secondary me-2">
+                <i class="fas fa-clock-rotate-left me-1"></i> Lifetime History
+            </a>
             <a href="<%= request.getContextPath() %>/StudentViewBooksServlet" class="btn-lib-primary">
                 <i class="fas fa-magnifying-glass me-1"></i> Browse Catalog
             </a>
         </div>
     </header>
 
+    <% if (pendingConfirmations > 0) { %>
+        <!-- Urgent Pending Issue Confirmations Banner -->
+        <div class="alert alert-warning mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 shadow-sm" role="alert" style="border-left: 4px solid #f59e0b; background-color: rgba(245, 158, 11, 0.1);">
+            <div class="d-flex align-items-center gap-3">
+                <div style="font-size: 1.75rem; color: #d97706;">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div>
+                    <h5 class="alert-heading mb-1 fw-bold text-dark">Action Required: <%= pendingConfirmations %> Book Loan <%= pendingConfirmations == 1 ? "Assignment" : "Assignments" %> Awaiting Confirmation</h5>
+                    <p class="mb-0 text-muted small">The library administrator has assigned a book to you. Please confirm whether you accept or decline this issue.</p>
+                </div>
+            </div>
+            <div>
+                <a href="<%= request.getContextPath() %>/StudentIssuedBooksServlet" class="btn-lib-primary btn-sm px-3 py-2">
+                    <i class="fas fa-check-double me-1"></i> Review &amp; Confirm Now
+                </a>
+            </div>
+        </div>
+    <% } %>
+
     <!-- Borrowing Quota Panel -->
     <div class="panel mb-4">
         <div class="panel-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
-                    <strong class="text-dark small text-uppercase" style="letter-spacing: 0.5px;">Borrowing Quota</strong>
-                    <span class="text-muted small ms-2">(Maximum 3 books per student)</span>
+                    <strong class="small text-uppercase" style="letter-spacing: 0.5px;">Borrowing Quota</strong>
+                    <span class="text-muted small ms-2">(Maximum <%= quotaMax %> books per student)</span>
                 </div>
                 <span class="badge-status <%= borrowedCount >= quotaMax ? "badge-danger" : "badge-neutral" %>">
                     <%= borrowedCount %> of <%= quotaMax %> Active Books Used
@@ -71,7 +106,7 @@
             </div>
             <div class="d-flex justify-content-between align-items-center small text-muted">
                 <span><%= quotaMax - borrowedCount > 0 ? "You may borrow " + (quotaMax - borrowedCount) + " more book(s) from the catalog." : "Borrowing limit reached. Please return an existing loan to borrow new titles." %></span>
-                <span>Limit: 3 concurrent loans</span>
+                <span>Limit: <%= quotaMax %> concurrent loans</span>
             </div>
         </div>
     </div>
@@ -113,28 +148,42 @@
         </div>
         <div class="panel-body">
             <div class="row g-3">
-                <div class="col-sm-6 col-lg-3">
+                <div class="col-sm-6 col-md-4">
                     <a href="<%= request.getContextPath() %>/StudentViewBooksServlet" class="btn-lib-secondary w-100 d-flex flex-column align-items-center py-4 text-center gap-2">
                         <i class="fas fa-magnifying-glass fa-2x text-primary mb-1"></i>
                         <span class="fw-semibold text-dark">Browse Catalog</span>
                         <span class="text-muted small">Search books and check physical copy availability</span>
                     </a>
                 </div>
-                <div class="col-sm-6 col-lg-3">
+                <div class="col-sm-6 col-md-4">
                     <a href="<%= request.getContextPath() %>/StudentIssuedBooksServlet" class="btn-lib-secondary w-100 d-flex flex-column align-items-center py-4 text-center gap-2">
                         <i class="fas fa-book fa-2x text-primary mb-1"></i>
                         <span class="fw-semibold text-dark">My Borrowed Books</span>
-                        <span class="text-muted small">Check due dates and apply for +7 day loan renewals</span>
+                        <span class="text-muted small">Check active loans, extensions &amp; confirm issue assignments</span>
                     </a>
                 </div>
-                <div class="col-sm-6 col-lg-3">
+                <div class="col-sm-6 col-md-4">
+                    <a href="<%= request.getContextPath() %>/StudentBorrowingHistoryServlet" class="btn-lib-secondary w-100 d-flex flex-column align-items-center py-4 text-center gap-2">
+                        <i class="fas fa-clock-rotate-left fa-2x text-info mb-1"></i>
+                        <span class="fw-semibold text-dark">Borrowing History</span>
+                        <span class="text-muted small">Lifetime archive of all issued, returned &amp; confirmed books</span>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <a href="<%= request.getContextPath() %>/StudentReservationsServlet" class="btn-lib-secondary w-100 d-flex flex-column align-items-center py-4 text-center gap-2">
+                        <i class="fas fa-calendar-check fa-2x text-success mb-1"></i>
+                        <span class="fw-semibold text-dark">My Reservations</span>
+                        <span class="text-muted small">Track waitlist position and pickup availability</span>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-md-4">
                     <a href="<%= request.getContextPath() %>/StudentFineStatusServlet" class="btn-lib-secondary w-100 d-flex flex-column align-items-center py-4 text-center gap-2">
                         <i class="fas fa-receipt fa-2x text-warning mb-1"></i>
                         <span class="fw-semibold text-dark">Overdue Fines</span>
                         <span class="text-muted small">Review itemized penalty fees and record settlements</span>
                     </a>
                 </div>
-                <div class="col-sm-6 col-lg-3">
+                <div class="col-sm-6 col-md-4">
                     <a href="<%= request.getContextPath() %>/StudentProfileServlet" class="btn-lib-secondary w-100 d-flex flex-column align-items-center py-4 text-center gap-2">
                         <i class="fas fa-id-card fa-2x text-primary mb-1"></i>
                         <span class="fw-semibold text-dark">Profile &amp; Security</span>

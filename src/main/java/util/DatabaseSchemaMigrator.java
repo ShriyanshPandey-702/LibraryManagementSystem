@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -90,8 +91,12 @@ public final class DatabaseSchemaMigrator {
         addColumnIfNotExists(con, "issue_books", "course",          "VARCHAR(50)");
         addColumnIfNotExists(con, "issue_books", "year",            "VARCHAR(20)");
         addColumnIfNotExists(con, "issue_books", "section",         "VARCHAR(20)");
-        addColumnIfNotExists(con, "issue_books", "fine_paid",       "TINYINT(1) NOT NULL DEFAULT 0");
-        addColumnIfNotExists(con, "issue_books", "renew_count",     "INT NOT NULL DEFAULT 0");
+        addColumnIfNotExists(con, "issue_books", "fine_paid",           "TINYINT(1) NOT NULL DEFAULT 0");
+        addColumnIfNotExists(con, "issue_books", "renew_count",         "INT NOT NULL DEFAULT 0");
+        addColumnIfNotExists(con, "issue_books", "admin_issued_at",     "TIMESTAMP NULL");
+        addColumnIfNotExists(con, "issue_books", "confirmed_at",        "TIMESTAMP NULL");
+        addColumnIfNotExists(con, "issue_books", "rejection_reason",    "TEXT NULL");
+        addColumnIfNotExists(con, "issue_books", "request_date",        "DATE NULL");
 
         // ── Book Requests ──────────────────────────────────────────────────────
         execute(con, """
@@ -114,17 +119,135 @@ public final class DatabaseSchemaMigrator {
         addColumnIfNotExists(con, "book_requests", "year",         "VARCHAR(20)");
         addColumnIfNotExists(con, "book_requests", "book_title",   "VARCHAR(150)");
 
-        // ── Fine Settings ──────────────────────────────────────────────────────
+        // ── Books optional metadata columns ────────────────────────────────────
+        addColumnIfNotExists(con, "books", "description",      "TEXT");
+        addColumnIfNotExists(con, "books", "cover_image",      "VARCHAR(255)");
+        addColumnIfNotExists(con, "books", "publisher",        "VARCHAR(150)");
+        addColumnIfNotExists(con, "books", "publication_year", "INT");
+
+        // ── System Settings ────────────────────────────────────────────────────
         execute(con, """
-                CREATE TABLE IF NOT EXISTS fine_settings (
-                    id           INT PRIMARY KEY,
-                    fine_per_day DECIMAL(10,2) NOT NULL DEFAULT 5.00
+                CREATE TABLE IF NOT EXISTS system_settings (
+                    setting_key   VARCHAR(50) PRIMARY KEY,
+                    setting_value VARCHAR(100) NOT NULL
                 )""");
 
-        execute(con, "INSERT IGNORE INTO fine_settings (id, fine_per_day) VALUES (1, 5.00)");
+        execute(con, "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('fine_per_day', '5.00')");
+        execute(con, "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('renewal_days', '7')");
+        execute(con, "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('max_books_per_student', '3')");
+        execute(con, "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('reservation_pickup_days', '3')");
+        // Widen status column to hold longer values like 'PendingConfirmation'
+        try {
+            execute(con, "ALTER TABLE issue_books MODIFY COLUMN status VARCHAR(30) NOT NULL DEFAULT 'Issued'");
+        } catch (Exception ignored) { /* already wide enough */ }
+
+        // ── Book Reviews & Ratings ─────────────────────────────────────────────
+        execute(con, """
+                CREATE TABLE IF NOT EXISTS book_reviews (
+                    id          INT PRIMARY KEY AUTO_INCREMENT,
+                    book_id     INT          NOT NULL,
+                    student_id  INT          NOT NULL,
+                    rating      INT          NOT NULL,
+                    review_text TEXT,
+                    is_hidden   TINYINT(1)   NOT NULL DEFAULT 0,
+                    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    CONSTRAINT fk_review_book    FOREIGN KEY (book_id)    REFERENCES books(id)    ON DELETE CASCADE,
+                    CONSTRAINT fk_review_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+                    CONSTRAINT uq_book_student_review UNIQUE (book_id, student_id)
+                )""");
+
+        // ── Lost or Damaged Book Reports ───────────────────────────────────────
+        execute(con, """
+                CREATE TABLE IF NOT EXISTS lost_damaged_reports (
+                    id           INT PRIMARY KEY AUTO_INCREMENT,
+                    issue_id     INT          NOT NULL,
+                    book_id      INT          NOT NULL,
+                    student_id   INT          NOT NULL,
+                    copy_id      INT,
+                    report_type  VARCHAR(20)  NOT NULL,
+                    description  TEXT,
+                    status       VARCHAR(20)  NOT NULL DEFAULT 'Pending',
+                    admin_notes  TEXT,
+                    fine_amount  DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    resolved_at  TIMESTAMP    NULL,
+                    CONSTRAINT fk_ldr_issue   FOREIGN KEY (issue_id)   REFERENCES issue_books(id) ON DELETE CASCADE,
+                    CONSTRAINT fk_ldr_book    FOREIGN KEY (book_id)    REFERENCES books(id)       ON DELETE CASCADE,
+                    CONSTRAINT fk_ldr_student FOREIGN KEY (student_id) REFERENCES students(id)    ON DELETE CASCADE
+                )""");
+
+        // ── Book Reservations & Waiting Lists ──────────────────────────────────
+        execute(con, """
+                CREATE TABLE IF NOT EXISTS book_reservations (
+                    id               INT PRIMARY KEY AUTO_INCREMENT,
+                    book_id          INT          NOT NULL,
+                    student_id       INT          NOT NULL,
+                    reservation_date TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    status           VARCHAR(20)  NOT NULL DEFAULT 'Waiting',
+                    pickup_deadline  DATE,
+                    notified         TINYINT(1)   NOT NULL DEFAULT 0,
+                    CONSTRAINT fk_res_book    FOREIGN KEY (book_id)    REFERENCES books(id)    ON DELETE CASCADE,
+                    CONSTRAINT fk_res_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+                )""");
+
+        // ── Notifications ──────────────────────────────────────────────────────
+        execute(con, """
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id         INT PRIMARY KEY AUTO_INCREMENT,
+                    user_id    INT          NOT NULL,
+                    user_role  VARCHAR(20)  NOT NULL,
+                    title      VARCHAR(150) NOT NULL,
+                    message    TEXT         NOT NULL,
+                    type       VARCHAR(50)  NOT NULL DEFAULT 'GENERAL',
+                    link       VARCHAR(255),
+                    is_read    TINYINT(1)   NOT NULL DEFAULT 0,
+                    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )""");
+
+        // ── Physical Book Copies & Barcodes ────────────────────────────────────
+        execute(con, """
+                CREATE TABLE IF NOT EXISTS book_copies (
+                    id               INT PRIMARY KEY AUTO_INCREMENT,
+                    book_id          INT          NOT NULL,
+                    copy_number      INT          NOT NULL,
+                    barcode_id       VARCHAR(50)  NOT NULL UNIQUE,
+                    status           VARCHAR(20)  NOT NULL DEFAULT 'Available',
+                    condition_notes  VARCHAR(255) DEFAULT 'Good condition',
+                    acquisition_date DATE         NOT NULL DEFAULT (CURRENT_DATE),
+                    CONSTRAINT fk_copy_book FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+                )""");
+
+        addColumnIfNotExists(con, "issue_books", "copy_id", "INT NULL");
+
+        // Backfill physical copies for existing books with quantity > 0
+        backfillBookCopies(con);
 
         // ── Seed admin with BCrypt-hashed password ────────────────────────────
         seedAdmin(con);
+    }
+
+    /** Backfills book_copies for any existing books missing copy records. */
+    private static void backfillBookCopies(Connection con) throws SQLException {
+        String selectSql = "SELECT b.id, b.quantity FROM books b WHERE b.is_deleted = 0 AND b.quantity > 0 " +
+                           "AND NOT EXISTS (SELECT 1 FROM book_copies bc WHERE bc.book_id = b.id)";
+        String insertSql = "INSERT IGNORE INTO book_copies (book_id, copy_number, barcode_id, status) VALUES (?, ?, ?, 'Available')";
+
+        try (Statement st = con.createStatement();
+             ResultSet rs = st.executeQuery(selectSql);
+             PreparedStatement ps = con.prepareStatement(insertSql)) {
+            while (rs.next()) {
+                int bookId = rs.getInt("id");
+                int qty = rs.getInt("quantity");
+                for (int c = 1; c <= qty; c++) {
+                    ps.setInt(1, bookId);
+                    ps.setInt(2, c);
+                    ps.setString(3, "BC-" + bookId + "-" + String.format("%03d", c));
+                    ps.addBatch();
+                }
+            }
+            ps.executeBatch();
+        }
     }
 
     /** Seeds the default admin if it does not exist yet, using a BCrypt hash. */

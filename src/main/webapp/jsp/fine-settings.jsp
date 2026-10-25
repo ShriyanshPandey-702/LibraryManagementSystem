@@ -4,9 +4,12 @@
         response.sendRedirect(request.getContextPath() + "/LoginServlet");
         return;
     }
-    String successMessage = (String) request.getAttribute("successMessage");
-    String errorMessage   = (String) request.getAttribute("errorMessage");
-    Object finePerDay     = request.getAttribute("finePerDay");
+    String successMessage    = (String) request.getAttribute("successMessage");
+    String errorMessage      = (String) request.getAttribute("errorMessage");
+    Object finePerDay        = request.getAttribute("finePerDay");
+    Object renewalDays       = request.getAttribute("renewalDays");
+    Object maxBooksPerStudent = request.getAttribute("maxBooksPerStudent");
+    Object pickupDays        = request.getAttribute("pickupDays");
 %>
 <jsp:include page="includes/header.jsp" />
 <jsp:include page="includes/admin-navbar.jsp" />
@@ -16,8 +19,8 @@
     <!-- Page Header -->
     <header class="page-header">
         <div>
-            <h1 class="page-title">Fine Settings</h1>
-            <p class="page-subtitle">Configure the institutional daily penalty rate applied to overdue book returns.</p>
+            <h1 class="page-title">Library Policies & Settings</h1>
+            <p class="page-subtitle">Configure institutional rules for borrowing quotas, loan renewal extensions, pickup deadlines, and fine rates.</p>
         </div>
         <div class="page-header-actions">
             <a href="<%= request.getContextPath() %>/DashboardServlet" class="btn-lib-secondary">
@@ -38,49 +41,97 @@
         </div>
     <% } %>
 
-    <!-- Rate Form Panel -->
-    <div class="panel" style="max-width: 620px;">
-        <div class="panel-header">
-            <h2 class="panel-title">Daily Overdue Penalty Rate</h2>
-        </div>
-        <div class="panel-body">
-            <form action="<%= request.getContextPath() %>/FineSettingsServlet" method="post">
-                <div class="mb-4">
-                    <label for="finePerDayInput" class="form-label">Penalty Amount Per Day (₹) <span class="text-danger">*</span></label>
-                    <div class="input-group" style="max-width: 240px;">
-                        <span class="input-group-text">₹</span>
-                        <input type="number" id="finePerDayInput" step="0.01" min="0" class="form-control" name="finePerDay"
-                               value="<%= finePerDay != null ? finePerDay : "5.00" %>" required>
-                    </div>
-                    <div class="form-text mt-2">
-                        Applied across all active book loans for each calendar day elapsed beyond the due date.
-                    </div>
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <!-- Policy Form Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Institutional Circulation Rules</h2>
                 </div>
+                <div class="panel-body">
+                    <form action="<%= request.getContextPath() %>/FineSettingsServlet" method="post">
+                        
+                        <!-- Daily Fine Rate -->
+                        <div class="mb-4">
+                            <label for="finePerDayInput" class="form-label fw-bold">Overdue Penalty Per Day (₹) <span class="text-danger">*</span></label>
+                            <div class="input-group" style="max-width: 260px;">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" id="finePerDayInput" step="0.50" min="0" class="form-control" name="finePerDay"
+                                       value="<%= finePerDay != null ? finePerDay : "5.00" %>" required>
+                            </div>
+                            <div class="form-text mt-1">
+                                Applied across active book loans for each calendar day past the due date.
+                            </div>
+                        </div>
 
-                <div class="pt-3 border-top d-flex gap-2">
-                    <button type="submit" class="btn-lib-primary px-4">
-                        <i class="fas fa-check me-1"></i> Save Rate Changes
-                    </button>
-                    <a href="<%= request.getContextPath() %>/SettingsServlet" class="btn-lib-secondary">
-                        Cancel
-                    </a>
+                        <!-- Renewal Extension Days -->
+                        <div class="mb-4">
+                            <label for="renewalDaysInput" class="form-label fw-bold">Loan Renewal Extension (Days) <span class="text-danger">*</span></label>
+                            <div class="input-group" style="max-width: 260px;">
+                                <input type="number" id="renewalDaysInput" step="1" min="1" max="60" class="form-control" name="renewalDays"
+                                       value="<%= renewalDays != null ? renewalDays : "7" %>" required>
+                                <span class="input-group-text">Days</span>
+                            </div>
+                            <div class="form-text mt-1">
+                                Calendar days added to the due date when a student self-renews an active loan.
+                            </div>
+                        </div>
+
+                        <!-- Maximum Borrowing Quota -->
+                        <div class="mb-4">
+                            <label for="maxBooksInput" class="form-label fw-bold">Maximum Active Books Per Student <span class="text-danger">*</span></label>
+                            <div class="input-group" style="max-width: 260px;">
+                                <input type="number" id="maxBooksInput" step="1" min="1" max="50" class="form-control" name="maxBooksPerStudent"
+                                       value="<%= maxBooksPerStudent != null ? maxBooksPerStudent : "3" %>" required>
+                                <span class="input-group-text">Books</span>
+                            </div>
+                            <div class="form-text mt-1">
+                                Strict borrowing quota enforced across book requests and manual admin checkouts.
+                            </div>
+                        </div>
+
+                        <!-- Reservation Pickup Deadline -->
+                        <div class="mb-4">
+                            <label for="pickupDaysInput" class="form-label fw-bold">Reservation Pickup Window (Days) <span class="text-danger">*</span></label>
+                            <div class="input-group" style="max-width: 260px;">
+                                <input type="number" id="pickupDaysInput" step="1" min="1" max="30" class="form-control" name="pickupDays"
+                                       value="<%= pickupDays != null ? pickupDays : "3" %>" required>
+                                <span class="input-group-text">Days</span>
+                            </div>
+                            <div class="form-text mt-1">
+                                Time window a student has to collect a reserved copy before it is passed to the next in queue.
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-top d-flex gap-2">
+                            <button type="submit" class="btn-lib-primary px-4">
+                                <i class="fas fa-check me-1"></i> Save Policy Settings
+                            </button>
+                            <a href="<%= request.getContextPath() %>/DashboardServlet" class="btn-lib-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
-    </div>
 
-    <!-- Calculation Policy Panel -->
-    <div class="panel" style="max-width: 620px;">
-        <div class="panel-header">
-            <h3 class="panel-title h6">Fine Calculation Rules</h3>
-        </div>
-        <div class="panel-body text-secondary small">
-            <ul class="mb-0 ps-3">
-                <li class="mb-1"><strong>Daily Rate Formula:</strong> Total Fine = Daily Rate × Days Past Due.</li>
-                <li class="mb-1"><strong>Grace Period:</strong> Fines begin accruing immediately on the calendar day following the due date.</li>
-                <li class="mb-1"><strong>Settlement:</strong> Outstanding balances are itemized in the student portal and can be cleared prior to new loans.</li>
-                <li><strong>Return Check-in:</strong> Unsettled fines remain linked to the student's circulation account until recorded as paid.</li>
-            </ul>
+        <div class="col-lg-5">
+            <!-- Rules Reference Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h3 class="panel-title h6">Policy Specifications</h3>
+                </div>
+                <div class="panel-body text-secondary small">
+                    <ul class="mb-0 ps-3">
+                        <li class="mb-2"><strong>Dynamic Fine Calculation:</strong> Fines accrue daily from the day following the scheduled due date until physical check-in.</li>
+                        <li class="mb-2"><strong>Renewal Safeguards:</strong> A maximum of 2 extensions are permitted per loan. Overdue loans with outstanding fines cannot be renewed until returned.</li>
+                        <li class="mb-2"><strong>Quota Protection:</strong> Students who reach the maximum book limit cannot place reservation requests or borrow additional volumes.</li>
+                        <li class="mb-2"><strong>FIFO Reservation Queue:</strong> When a copy is returned, it is automatically allocated to the earliest waiting reservation with notification dispatched.</li>
+                        <li><strong>Audit Ledger:</strong> All settlements and fine overrides are itemized with timestamped records.</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 

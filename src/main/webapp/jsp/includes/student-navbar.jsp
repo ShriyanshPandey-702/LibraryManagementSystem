@@ -33,6 +33,16 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link <%= currentUri.contains("StudentBorrowingHistory") ? "active" : "" %>" href="<%= ctx %>/StudentBorrowingHistoryServlet">
+                        <i class="fas fa-clock-rotate-left"></i> Borrowing History
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link <%= currentUri.contains("StudentReservations") ? "active" : "" %>" href="<%= ctx %>/StudentReservationsServlet">
+                        <i class="fas fa-calendar-check"></i> Reservations
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link <%= currentUri.contains("StudentFineStatus") ? "active" : "" %>" href="<%= ctx %>/StudentFineStatusServlet">
                         <i class="fas fa-receipt"></i> Overdue Fines
                     </a>
@@ -43,7 +53,30 @@
                     </a>
                 </li>
             </ul>
+
             <div class="d-flex align-items-center gap-3">
+                <!-- Theme Toggle Button -->
+                <button type="button" class="btn-theme-toggle" id="themeToggleBtn" aria-label="Toggle theme" title="Toggle Light / Dark mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+
+                <!-- Notifications Dropdown -->
+                <div class="notif-wrapper">
+                    <button type="button" class="notif-bell-btn" id="notifBellBtn" aria-label="View notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="notif-badge d-none" id="notifBadge">0</span>
+                    </button>
+                    <div class="notif-dropdown" id="notifDropdown">
+                        <div class="notif-header">
+                            <span>Notifications</span>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small" id="markAllReadBtn">Mark all as read</button>
+                        </div>
+                        <div id="notifList">
+                            <div class="p-3 text-center text-muted small">No notifications.</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="student-user-pill" title="Signed in as <%= studentName %>">
                     <span class="student-user-avatar"><%= initial %></span>
                     <span><%= studentName %></span>

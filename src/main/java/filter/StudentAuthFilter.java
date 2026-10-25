@@ -21,7 +21,14 @@ import java.io.IOException;
         "/StudentBookRequestServlet",
         "/StudentRequestBookServlet",
         "/StudentRenewBookServlet",
-        "/StudentPayFineServlet"
+        "/StudentReturnBookServlet",
+        "/StudentReservationsServlet",
+        "/StudentReservationServlet",
+        "/StudentReportBookServlet",
+        "/StudentPayFineServlet",
+        "/StudentBorrowingHistoryServlet",
+        "/StudentConfirmIssueServlet",
+        "/ReviewServlet"
 })
 public class StudentAuthFilter implements Filter {
 

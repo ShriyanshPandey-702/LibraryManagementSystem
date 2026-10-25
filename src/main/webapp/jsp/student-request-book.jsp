@@ -35,7 +35,7 @@
             </div>
             <h2 class="h4 fw-bold mb-2">How to Request a Book</h2>
             <p class="text-muted mb-4 mx-auto" style="max-width: 540px; line-height: 1.6;">
-                Books must be requested directly from the real-time catalog. If a book has available copies in stock and you are within your 3-book borrowing limit, click <strong>Request</strong> on that book to send a reservation request to the librarian.
+                Books must be requested directly from the real-time catalog. If a book has available copies in stock and you are within your active borrowing quota, click <strong>Request</strong> on that book to send a reservation request to the librarian.
             </p>
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <a href="<%= request.getContextPath() %>/StudentViewBooksServlet" class="btn-lib-primary">

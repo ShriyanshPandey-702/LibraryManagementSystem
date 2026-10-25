@@ -38,28 +38,43 @@
     <% } %>
 
     <!-- Add Book Form Panel -->
-    <div class="panel" style="max-width: 860px;">
-        <div class="panel-header">
+    <div class="panel" style="max-width: 900px;">
+        <div class="panel-header d-flex justify-content-between align-items-center">
             <h2 class="panel-title">Book Metadata &amp; Inventory Details</h2>
+            <span class="text-muted small">Fields with <span class="text-danger">*</span> are mandatory</span>
         </div>
         <div class="panel-body">
-            <form action="<%= request.getContextPath() %>/AddBookServlet" method="post">
+            <form action="<%= request.getContextPath() %>/AddBookServlet" method="post" enctype="multipart/form-data">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label for="bookTitle" class="form-label">Book Title <span class="text-danger">*</span></label>
+                        <label for="bookTitle" class="form-label font-mono small">// TITLE <span class="text-danger">*</span></label>
                         <input type="text" id="bookTitle" name="title" class="form-control" required
                                placeholder="e.g. Introduction to Algorithms">
                     </div>
                     <div class="col-md-6">
-                        <label for="bookAuthor" class="form-label">Author <span class="text-danger">*</span></label>
+                        <label for="bookAuthor" class="form-label font-mono small">// AUTHOR <span class="text-danger">*</span></label>
                         <input type="text" id="bookAuthor" name="author" class="form-control" required
                                placeholder="e.g. Thomas H. Cormen, Charles E. Leiserson">
                     </div>
+
                     <div class="col-md-4">
-                        <label for="categorySelect" class="form-label">Category <span class="text-danger">*</span></label>
-                        <select name="category" id="categorySelect" class="form-select" required
-                                onchange="toggleCustomCategory()">
-                            <option value="">-- Select Category --</option>
+                        <label for="bookQty" class="form-label font-mono small">// INITIAL COPIES <span class="text-danger">*</span></label>
+                        <input type="number" id="bookQty" min="1" name="quantity" class="form-control"
+                               required value="1" placeholder="e.g. 5">
+                        <div class="form-text small">Physical copies &amp; barcodes will be automatically generated.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="bookPrice" class="form-label font-mono small">// UNIT PRICE (₹) <span class="text-muted">(Optional)</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" id="bookPrice" step="0.01" min="0" name="price" class="form-control"
+                                   placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="categorySelect" class="form-label font-mono small">// CATEGORY / GENRE <span class="text-muted">(Optional)</span></label>
+                        <select name="category" id="categorySelect" class="form-select" onchange="toggleCustomCategory()">
+                            <option value="">-- Optional Category --</option>
                             <option>Programming</option>
                             <option>Computer Science</option>
                             <option>Database</option>
@@ -87,29 +102,36 @@
                                    class="form-control" placeholder="Enter custom category name">
                         </div>
                     </div>
+
                     <div class="col-md-4">
-                        <label for="bookIsbn" class="form-label">ISBN (13 Digits) <span class="text-danger">*</span></label>
+                        <label for="bookIsbn" class="form-label font-mono small">// ISBN <span class="text-muted">(Optional)</span></label>
                         <input type="text" id="bookIsbn" name="isbn" class="form-control"
-                               placeholder="e.g. 9780262033848"
-                               pattern="\d{13}" maxlength="13"
-                               title="ISBN must be exactly 13 numeric digits" required>
+                               placeholder="e.g. 9780262033848" maxlength="20">
                     </div>
                     <div class="col-md-4">
-                        <label for="bookRack" class="form-label">Shelf Rack Location</label>
+                        <label for="bookPublisher" class="form-label font-mono small">// PUBLISHER <span class="text-muted">(Optional)</span></label>
+                        <input type="text" id="bookPublisher" name="publisher" class="form-control"
+                               placeholder="e.g. MIT Press">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="bookYear" class="form-label font-mono small">// PUBLICATION YEAR <span class="text-muted">(Optional)</span></label>
+                        <input type="number" id="bookYear" name="publication_year" class="form-control"
+                               min="1000" max="2099" placeholder="e.g. 2022">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="bookRack" class="form-label font-mono small">// SHELF RACK LOCATION <span class="text-muted">(Optional)</span></label>
                         <input type="text" id="bookRack" name="rack_no" class="form-control" placeholder="e.g. CS-04-A">
                     </div>
                     <div class="col-md-6">
-                        <label for="bookPrice" class="form-label">Unit Price (₹) <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text">₹</span>
-                            <input type="number" id="bookPrice" step="0.01" min="0" name="price" class="form-control"
-                                   required placeholder="0.00">
-                        </div>
+                        <label for="coverFile" class="form-label font-mono small">// BOOK COVER IMAGE <span class="text-muted">(Optional, JPG/PNG/WebP, max 5MB)</span></label>
+                        <input type="file" id="coverFile" name="cover_file" class="form-control" accept="image/jpeg,image/png,image/webp">
                     </div>
-                    <div class="col-md-6">
-                        <label for="bookQty" class="form-label">Initial Copies Quantity <span class="text-danger">*</span></label>
-                        <input type="number" id="bookQty" min="1" name="quantity" class="form-control"
-                               required placeholder="e.g. 5">
+
+                    <div class="col-12">
+                        <label for="bookDesc" class="form-label font-mono small">// DESCRIPTION / SYNOPSIS <span class="text-muted">(Optional)</span></label>
+                        <textarea id="bookDesc" name="description" rows="3" class="form-control"
+                                  placeholder="Brief summary, preface, or bibliographic notes for students..."></textarea>
                     </div>
                 </div>
 

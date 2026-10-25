@@ -34,29 +34,44 @@
         </div>
     <% } else { %>
 
-    <div class="panel" style="max-width: 860px;">
-        <div class="panel-header">
+    <div class="panel" style="max-width: 900px;">
+        <div class="panel-header d-flex justify-content-between align-items-center">
             <h2 class="panel-title">Update Catalog Information</h2>
+            <span class="text-muted small">Fields with <span class="text-danger">*</span> are mandatory</span>
         </div>
         <div class="panel-body">
-            <form action="<%= request.getContextPath() %>/UpdateBookServlet" method="post">
+            <form action="<%= request.getContextPath() %>/UpdateBookServlet" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="id" value="<%= book.getBookId() %>">
 
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label for="editTitle" class="form-label">Book Title <span class="text-danger">*</span></label>
+                        <label for="editTitle" class="form-label font-mono small">// TITLE <span class="text-danger">*</span></label>
                         <input type="text" id="editTitle" name="title" class="form-control"
                                value="<%= book.getTitle() %>" required>
                     </div>
                     <div class="col-md-6">
-                        <label for="editAuthor" class="form-label">Author <span class="text-danger">*</span></label>
+                        <label for="editAuthor" class="form-label font-mono small">// AUTHOR <span class="text-danger">*</span></label>
                         <input type="text" id="editAuthor" name="author" class="form-control"
                                value="<%= book.getAuthor() %>" required>
                     </div>
+
                     <div class="col-md-4">
-                        <label for="editCategory" class="form-label">Category <span class="text-danger">*</span></label>
-                        <select id="editCategory" name="category" class="form-select" required>
-                            <option value="">-- Select Category --</option>
+                        <label for="editQuantity" class="form-label font-mono small">// PHYSICAL COPIES <span class="text-danger">*</span></label>
+                        <input type="number" id="editQuantity" min="0" name="quantity" class="form-control"
+                               value="<%= book.getQuantity() %>" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="editPrice" class="form-label font-mono small">// UNIT PRICE (₹) <span class="text-muted">(Optional)</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" id="editPrice" step="0.01" min="0" name="price" class="form-control"
+                                   value="<%= book.getPrice() %>">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="editCategory" class="form-label font-mono small">// CATEGORY / GENRE <span class="text-muted">(Optional)</span></label>
+                        <select id="editCategory" name="category" class="form-select">
+                            <option value="">-- Optional Category --</option>
                             <%
                                 String[] cats = {"Programming","Computer Science","Database","Networking",
                                     "AI / Machine Learning","Mathematics","Physics","Chemistry",
@@ -71,28 +86,43 @@
                             <% } %>
                         </select>
                     </div>
+
                     <div class="col-md-4">
-                        <label for="editIsbn" class="form-label">ISBN</label>
+                        <label for="editIsbn" class="form-label font-mono small">// ISBN <span class="text-muted">(Optional)</span></label>
                         <input type="text" id="editIsbn" name="isbn" class="form-control"
                                value="<%= book.getIsbn() != null ? book.getIsbn() : "" %>">
                     </div>
                     <div class="col-md-4">
-                        <label for="editRack" class="form-label">Shelf Rack Location</label>
+                        <label for="editPublisher" class="form-label font-mono small">// PUBLISHER <span class="text-muted">(Optional)</span></label>
+                        <input type="text" id="editPublisher" name="publisher" class="form-control"
+                               value="<%= book.getPublisher() != null ? book.getPublisher() : "" %>">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="editYear" class="form-label font-mono small">// PUBLICATION YEAR <span class="text-muted">(Optional)</span></label>
+                        <input type="number" id="editYear" name="publication_year" class="form-control"
+                               min="1000" max="2099"
+                               value="<%= book.getPublicationYear() != null && book.getPublicationYear() > 0 ? book.getPublicationYear() : "" %>">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="editRack" class="form-label font-mono small">// SHELF RACK LOCATION <span class="text-muted">(Optional)</span></label>
                         <input type="text" id="editRack" name="rack_no" class="form-control"
                                value="<%= book.getRackNo() != null ? book.getRackNo() : "" %>">
                     </div>
                     <div class="col-md-6">
-                        <label for="editPrice" class="form-label">Price (₹) <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text">₹</span>
-                            <input type="number" id="editPrice" step="0.01" min="0" name="price" class="form-control"
-                                   value="<%= book.getPrice() %>" required>
+                        <label for="editCover" class="form-label font-mono small">// COVER IMAGE <span class="text-muted">(Optional, upload new to replace)</span></label>
+                        <div class="d-flex align-items-center gap-3">
+                            <% if (book.getCoverImage() != null && !book.getCoverImage().trim().isEmpty()) { %>
+                                <img src="<%= request.getContextPath() %>/<%= book.getCoverImage() %>" alt="Cover" class="book-cover-thumb" style="width: 48px; height: 60px; object-fit: cover; border: 1px solid var(--color-border); border-radius: 4px;">
+                            <% } %>
+                            <input type="file" id="editCover" name="cover_file" class="form-control" accept="image/jpeg,image/png,image/webp">
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <label for="editQuantity" class="form-label">Available Physical Copies <span class="text-danger">*</span></label>
-                        <input type="number" id="editQuantity" min="0" name="quantity" class="form-control"
-                               value="<%= book.getQuantity() %>" required>
+
+                    <div class="col-12">
+                        <label for="editDesc" class="form-label font-mono small">// DESCRIPTION / SYNOPSIS <span class="text-muted">(Optional)</span></label>
+                        <textarea id="editDesc" name="description" rows="3" class="form-control"
+                                  placeholder="Brief summary or description..."><%= book.getDescription() != null ? book.getDescription() : "" %></textarea>
                     </div>
                 </div>
 

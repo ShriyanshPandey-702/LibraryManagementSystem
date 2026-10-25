@@ -69,24 +69,24 @@
                     <tr>
                         <td>
                             <div class="d-flex align-items-center gap-2">
-                                <span class="d-inline-flex align-items-center justify-content-center bg-light text-dark fw-bold rounded-1 border"
+                                <span class="d-inline-flex align-items-center justify-content-center bg-light fw-bold rounded-1 border"
                                       style="width: 28px; height: 28px; font-size: 0.8rem;">
                                     <%= studentInitial %>
                                 </span>
                                 <div>
-                                    <strong class="text-dark"><%= req.getStudentName() %></strong>
+                                    <strong><%= req.getStudentName() %></strong>
                                     <div class="text-muted small">Student #<%= req.getStudentId() %></div>
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <span class="text-secondary"><%= req.getCourse() != null ? req.getCourse() : "—" %></span>
+                            <span><%= req.getCourse() != null ? req.getCourse() : "—" %></span>
                         </td>
                         <td>
                             <span class="badge-status badge-neutral"><%= req.getYear() != null ? req.getYear() : "N/A" %></span>
                         </td>
                         <td>
-                            <div class="fw-semibold text-dark">
+                            <div class="fw-semibold">
                                 <i class="fas fa-book me-1 text-muted"></i><%= req.getBookTitle() %>
                             </div>
                         </td>

@@ -112,10 +112,10 @@
                         %>
                             <tr>
                                 <td>
-                                    <strong class="text-dark"><%= r.getBookTitle() %></strong>
+                                    <strong class="book-title"><%= r.getBookTitle() %></strong>
                                     <div class="text-muted small">Loan #<%= r.getIssueId() %></div>
                                 </td>
-                                <td class="text-secondary small"><%= r.getDueDate() %></td>
+                                <td class="text-muted small"><%= r.getDueDate() %></td>
                                 <td class="text-center">
                                     <% if ("Issued".equalsIgnoreCase(r.getStatus())) { %>
                                         <span class="badge-status badge-warning">Active Loan</span>

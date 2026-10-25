@@ -49,8 +49,9 @@ public class StudentBookRequestServlet extends HttpServlet {
             }
 
             // Quota check: cannot request more if already holding maximum active books
-            if (issueDAO.getStudentActiveBorrowedCount(student.getId()) >= dao.IssueDAO.MAX_BORROW_LIMIT) {
-                request.setAttribute("errorMessage", "Borrowing quota reached (Maximum " + dao.IssueDAO.MAX_BORROW_LIMIT + " books). Please return a book before requesting another.");
+            int currentLimit = issueDAO.getMaxBorrowLimit();
+            if (issueDAO.getStudentActiveBorrowedCount(student.getId()) >= currentLimit) {
+                request.setAttribute("errorMessage", "Borrowing quota reached (Maximum " + currentLimit + " books). Please return a book before requesting another.");
                 request.setAttribute("books", bookDAO.getAvailableBooks());
                 request.getRequestDispatcher("jsp/student-view-books.jsp").forward(request, response);
                 return;
@@ -79,6 +80,12 @@ public class StudentBookRequestServlet extends HttpServlet {
             bookRequest.setBookTitle(book.getTitle());
 
             if (bookRequestDAO.createRequest(bookRequest)) {
+                new dao.NotificationDAO().notifyAdmins(
+                    "New Book Request: " + book.getTitle(),
+                    "Student " + student.getName() + " (ID #" + student.getId() + ") requested \"" + book.getTitle() + "\".",
+                    "REQUEST",
+                    "AdminBookRequestsServlet"
+                );
                 response.sendRedirect("StudentViewBooksServlet?requested=1");
             } else {
                 response.sendRedirect("StudentViewBooksServlet?requestError=1");

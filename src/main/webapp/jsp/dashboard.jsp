@@ -24,10 +24,17 @@
             <h1 class="page-title">Library Overview</h1>
             <p class="page-subtitle">Welcome back, <%= adminName %>. Real-time circulation status and catalog metrics.</p>
         </div>
-        <div class="page-header-actions">
-            <a href="<%= request.getContextPath() %>/ExportBooksServlet" class="btn-lib-secondary">
-                <i class="fas fa-file-csv text-success"></i> Export Catalog (CSV)
-            </a>
+        <div class="page-header-actions d-flex flex-wrap gap-2">
+            <div class="btn-group">
+                <button type="button" class="btn-lib-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-csv text-success me-1"></i> Export Data (CSV)
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                    <li><a class="dropdown-item small" href="<%= request.getContextPath() %>/ExportBooksServlet"><i class="fas fa-book me-2"></i>Export Catalog</a></li>
+                    <li><a class="dropdown-item small" href="<%= request.getContextPath() %>/ExportLoansServlet"><i class="fas fa-arrow-right-arrow-left me-2"></i>Export Circulation Loans</a></li>
+                    <li><a class="dropdown-item small" href="<%= request.getContextPath() %>/ExportFinesServlet"><i class="fas fa-receipt me-2"></i>Export Fines &amp; Settlements</a></li>
+                </ul>
+            </div>
             <a href="<%= request.getContextPath() %>/AddBookServlet" class="btn-lib-primary">
                 <i class="fas fa-plus"></i> Add New Book
             </a>
@@ -47,34 +54,80 @@
     </div>
     <% } %>
 
+    <%
+        Object overdueCount = request.getAttribute("overdueCount");
+        Object outstandingFines = request.getAttribute("outstandingFines");
+        Object pendingReservations = request.getAttribute("pendingReservations");
+        Object pendingReports = request.getAttribute("pendingReports");
+        Double avgRating = (Double) request.getAttribute("catalogAvgRating");
+        int totalCopies = totalQty != null ? Integer.parseInt(totalQty.toString()) : 0;
+        int activeLoans = totalIssued != null ? Integer.parseInt(totalIssued.toString()) : 0;
+        int availCopies = Math.max(0, totalCopies - activeLoans);
+    %>
+
     <!-- Real Metrics Grid -->
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-xl-3">
             <div class="metric-card">
-                <div class="metric-label">Catalog Titles</div>
+                <div class="metric-label">// 01 CATALOG TITLES</div>
                 <div class="metric-value"><%= totalBooks != null ? totalBooks : "0" %></div>
-                <div class="metric-sub"><i class="fas fa-book me-1"></i> Unique catalog entries</div>
+                <div class="metric-sub"><i class="fas fa-book me-1"></i> Unique book titles</div>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
             <div class="metric-card">
-                <div class="metric-label">Physical Copies</div>
-                <div class="metric-value"><%= totalQty != null ? totalQty : "0" %></div>
-                <div class="metric-sub"><i class="fas fa-cubes me-1"></i> Total volumes in stock</div>
+                <div class="metric-label">// 02 PHYSICAL COPIES</div>
+                <div class="metric-value"><%= totalCopies %></div>
+                <div class="metric-sub"><span class="text-success"><%= availCopies %> Available</span> &bull; <%= activeLoans %> Borrowed</div>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
             <div class="metric-card">
-                <div class="metric-label">Currently Issued</div>
-                <div class="metric-value"><%= totalIssued != null ? totalIssued : "0" %></div>
-                <div class="metric-sub"><i class="fas fa-arrow-right-arrow-left me-1"></i> Active student loans</div>
+                <div class="metric-label">// 03 ACTIVE LOANS</div>
+                <div class="metric-value"><%= activeLoans %></div>
+                <div class="metric-sub"><i class="fas fa-arrow-right-arrow-left me-1"></i> Total active student loans</div>
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
             <div class="metric-card">
-                <div class="metric-label">Registered Students</div>
+                <div class="metric-label">// 04 REGISTERED STUDENTS</div>
                 <div class="metric-value"><%= totalStudents != null ? totalStudents : "0" %></div>
                 <div class="metric-sub"><i class="fas fa-user-graduate me-1"></i> Authorized borrowers</div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-label">// 05 OVERDUE LOANS</div>
+                <div class="metric-value <%= overdueCount != null && Integer.parseInt(overdueCount.toString()) > 0 ? "text-danger" : "" %>">
+                    <%= overdueCount != null ? overdueCount : "0" %>
+                </div>
+                <div class="metric-sub"><i class="fas fa-clock me-1 text-danger"></i> Past scheduled due date</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-label">// 06 UNPAID FINES</div>
+                <div class="metric-value <%= outstandingFines != null && ((Double)outstandingFines) > 0 ? "text-danger" : "" %>">
+                    ₹<%= String.format("%.2f", outstandingFines != null ? (Double)outstandingFines : 0.0) %>
+                </div>
+                <div class="metric-sub"><i class="fas fa-receipt me-1 text-danger"></i> Outstanding penalty balance</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-label">// 07 PENDING RESERVATIONS</div>
+                <div class="metric-value"><%= pendingReservations != null ? pendingReservations : "0" %></div>
+                <div class="metric-sub"><i class="fas fa-calendar-check me-1"></i> Waitlist queue entries</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-label">// 08 REVIEWS &amp; INCIDENTS</div>
+                <div class="metric-value">
+                    ★ <%= String.format("%.1f", avgRating != null ? avgRating : 0.0) %>
+                </div>
+                <div class="metric-sub"><%= pendingReports != null ? pendingReports : "0" %> lost/damaged incidents</div>
             </div>
         </div>
     </div>

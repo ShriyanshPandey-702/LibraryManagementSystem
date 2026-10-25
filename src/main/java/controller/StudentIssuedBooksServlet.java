@@ -37,7 +37,9 @@ public class StudentIssuedBooksServlet extends HttpServlet {
             return;
         }
 
-        request.setAttribute("issuedBooks", issueDAO.getIssuesByStudentId(studentId));
+        request.setAttribute("pendingConfirmations", issueDAO.getPendingIssuesByStudentId(studentId));
+        request.setAttribute("activeLoans", issueDAO.getActiveIssuesByStudentId(studentId));
+        request.setAttribute("issuedBooks", issueDAO.getActiveIssuesByStudentId(studentId));
         request.getRequestDispatcher("jsp/student-issued-books.jsp").forward(request, response);
     }
 }

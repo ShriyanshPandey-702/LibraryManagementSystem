@@ -32,8 +32,10 @@ public class StudentDashboardServlet extends HttpServlet {
         int studentId = student.getId();
 
         request.setAttribute("borrowedCount", issueDAO.getStudentActiveBorrowedCount(studentId));
+        request.setAttribute("pendingConfirmations", issueDAO.getPendingIssuesCountByStudentId(studentId));
         request.setAttribute("totalFine", issueDAO.getStudentTotalFine(studentId));
         request.setAttribute("pendingRequests", bookRequestDAO.getStudentPendingRequestCount(studentId));
+        request.setAttribute("quotaMax", issueDAO.getMaxBorrowLimit());
 
         request.getRequestDispatcher("jsp/student-dashboard.jsp").forward(request, response);
     }

@@ -24,7 +24,12 @@ import java.io.IOException;
         "/AdminBookRequestsServlet",
         "/FineSettingsServlet",
         "/SettingsServlet",
-        "/ExportBooksServlet"
+        "/ExportBooksServlet",
+        "/ExportLoansServlet",
+        "/ExportFinesServlet",
+        "/AdminReservationsServlet",
+        "/AdminLostDamagedServlet",
+        "/AdminBookCopiesServlet"
 })
 public class AdminAuthFilter implements Filter {
 
