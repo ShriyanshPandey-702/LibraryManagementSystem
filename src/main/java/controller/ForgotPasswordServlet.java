@@ -62,36 +62,41 @@ public class ForgotPasswordServlet extends HttpServlet {
             return;
         }
 
-        boolean updated;
-        if ("admin".equals(userType)) {
-            if (!loginDAO.adminExists(identifier)) {
-                request.setAttribute("errorMessage", "Admin username not found.");
-                request.setAttribute("userType", userType);
-                request.getRequestDispatcher("jsp/forgot-password.jsp").forward(request, response);
-                return;
-            }
-            updated = loginDAO.updateAdminPassword(identifier, newPassword);
-        } else {
-            if (!studentDAO.studentExistsByEmail(identifier)) {
-                request.setAttribute("errorMessage", "Student email not found.");
-                request.setAttribute("userType", userType);
-                request.getRequestDispatcher("jsp/forgot-password.jsp").forward(request, response);
-                return;
-            }
-            updated = studentDAO.updateStudentPassword(identifier, newPassword);
-        }
-
-        if (updated) {
+        try {
+            boolean updated;
             if ("admin".equals(userType)) {
-                response.sendRedirect("LoginServlet?reset=1");
+                if (!loginDAO.adminExists(identifier)) {
+                    request.setAttribute("errorMessage", "Admin username not found.");
+                    request.setAttribute("userType", userType);
+                    request.getRequestDispatcher("jsp/forgot-password.jsp").forward(request, response);
+                    return;
+                }
+                updated = loginDAO.updateAdminPassword(identifier, newPassword);
             } else {
-                response.sendRedirect("StudentLoginServlet?reset=1");
+                if (!studentDAO.studentExistsByEmail(identifier)) {
+                    request.setAttribute("errorMessage", "Student email not found.");
+                    request.setAttribute("userType", userType);
+                    request.getRequestDispatcher("jsp/forgot-password.jsp").forward(request, response);
+                    return;
+                }
+                updated = studentDAO.updateStudentPassword(identifier, newPassword);
             }
-            return;
-        }
 
-        request.setAttribute("errorMessage", "Unable to reset password. Please try again.");
-        request.setAttribute("userType", userType);
+            if (updated) {
+                if ("admin".equals(userType)) {
+                    response.sendRedirect("LoginServlet?reset=1");
+                } else {
+                    response.sendRedirect("StudentLoginServlet?reset=1");
+                }
+                return;
+            }
+
+            request.setAttribute("errorMessage", "Unable to reset password. Please try again.");
+            request.setAttribute("userType", userType);
+        } catch (Exception e) {
+            request.setAttribute("errorMessage", "Database is unavailable. Please ensure MySQL server is running.");
+            request.setAttribute("userType", userType);
+        }
         request.getRequestDispatcher("jsp/forgot-password.jsp").forward(request, response);
     }
 }

@@ -49,6 +49,7 @@ public final class DBConnection {
                     config.setIdleTimeout(600_000);
                     config.setMaxLifetime(1_800_000);
                     config.setLeakDetectionThreshold(60_000);
+                    config.setInitializationFailTimeout(2000);
                     config.setPoolName("LibraryPool");
                     config.addDataSourceProperty("cachePrepStmts", "true");
                     config.addDataSourceProperty("prepStmtCacheSize", "250");
@@ -67,23 +68,30 @@ public final class DBConnection {
      * Caller MUST close the connection (use try-with-resources).
      */
     public static Connection getConnection() throws SQLException {
-        Connection con = getDataSource().getConnection();
+        try {
+            Connection con = getDataSource().getConnection();
 
-        if (!schemaReady) {
-            synchronized (DBConnection.class) {
-                if (!schemaReady) {
-                    try {
-                        DatabaseSchemaMigrator.migrate(con);
-                        schemaReady = true;
-                        log.info("Database schema migration completed.");
-                    } catch (SQLException e) {
-                        log.error("Schema migration failed", e);
-                        throw e;
+            if (!schemaReady) {
+                synchronized (DBConnection.class) {
+                    if (!schemaReady) {
+                        try {
+                            DatabaseSchemaMigrator.migrate(con);
+                            schemaReady = true;
+                            log.info("Database schema migration completed.");
+                        } catch (SQLException e) {
+                            log.error("Schema migration failed", e);
+                            throw e;
+                        }
                     }
                 }
             }
+            return con;
+        } catch (SQLException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Database connection failure: " + e.getMessage());
+            throw new SQLException("Database connection failed: Please ensure MySQL server is running. (" + e.getMessage() + ")", e);
         }
-        return con;
     }
 
     /** Closes the pool gracefully (call on application shutdown). */

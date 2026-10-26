@@ -52,14 +52,16 @@ public class StudentRegisterServlet extends HttpServlet {
             return;
         }
 
-        boolean registered = studentDAO.registerStudent(name, email, mobile, password, course, year, section, address);
-
-        if (registered) {
-            response.sendRedirect("StudentLoginServlet?registered=1");
-            return;
+        try {
+            boolean registered = studentDAO.registerStudent(name, email, mobile, password, course, year, section, address);
+            if (registered) {
+                response.sendRedirect("StudentLoginServlet?registered=1");
+                return;
+            }
+            request.setAttribute("errorMessage", "Unable to register. Email may already exist.");
+        } catch (Exception e) {
+            request.setAttribute("errorMessage", "Database is unavailable. Please ensure MySQL server is running.");
         }
-
-        request.setAttribute("errorMessage", "Unable to register. Email may already exist.");
         request.getRequestDispatcher("jsp/student-register.jsp").forward(request, response);
     }
 }

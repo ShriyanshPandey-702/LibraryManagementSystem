@@ -49,7 +49,7 @@ public class StudentDAO {
      * Validates student login with BCrypt verification.
      * Also migrates legacy plain-text passwords transparently.
      */
-    public boolean validateStudent(String email, String password) {
+    public boolean validateStudent(String email, String password) throws SQLException {
         String sql = "SELECT id, password FROM students WHERE email = ?";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -71,8 +71,6 @@ public class StudentDAO {
                     }
                 }
             }
-        } catch (SQLException e) {
-            log.error("Error validating student credentials", e);
         }
         return false;
     }

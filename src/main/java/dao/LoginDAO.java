@@ -23,7 +23,7 @@ public class LoginDAO {
      * Validates admin credentials.
      * Handles transparent migration from plain-text to BCrypt on first login.
      */
-    public boolean validateAdmin(String username, String password) {
+    public boolean validateAdmin(String username, String password) throws SQLException {
         String sql = "SELECT password FROM admin WHERE username = ?";
 
         try (Connection con = DBConnection.getConnection();
@@ -45,8 +45,6 @@ public class LoginDAO {
                     }
                 }
             }
-        } catch (SQLException e) {
-            log.error("Error validating admin credentials", e);
         }
         return false;
     }

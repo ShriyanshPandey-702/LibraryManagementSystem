@@ -32,14 +32,17 @@ public class LoginServlet extends HttpServlet {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
 
-        if (loginDAO.validateAdmin(username, password)) {
-            HttpSession session = request.getSession();
-            session.setAttribute("adminUser", username);
-            response.sendRedirect("DashboardServlet");
-            return;
+        try {
+            if (loginDAO.validateAdmin(username, password)) {
+                HttpSession session = request.getSession();
+                session.setAttribute("adminUser", username);
+                response.sendRedirect("DashboardServlet");
+                return;
+            }
+            request.setAttribute("errorMessage", "Invalid username or password");
+        } catch (Exception e) {
+            request.setAttribute("errorMessage", "Database is unavailable. Please ensure MySQL server is running.");
         }
-
-        request.setAttribute("errorMessage", "Invalid username or password");
         request.getRequestDispatcher("jsp/login.jsp").forward(request, response);
     }
 }

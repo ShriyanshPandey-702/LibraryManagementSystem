@@ -49,19 +49,22 @@ public class StudentLoginServlet extends HttpServlet {
 
         if (email != null) email = email.trim().toLowerCase();
 
-        if (studentDAO.validateStudent(email, password)) {
-            HttpSession session = request.getSession();
-            model.Student student = studentDAO.getStudentByEmail(email);
-            if (student != null) {
-                session.setAttribute("studentUser", student);
-                session.setAttribute("studentId", student.getId());
-                session.setAttribute("studentName", student.getName());
+        try {
+            if (studentDAO.validateStudent(email, password)) {
+                HttpSession session = request.getSession();
+                model.Student student = studentDAO.getStudentByEmail(email);
+                if (student != null) {
+                    session.setAttribute("studentUser", student);
+                    session.setAttribute("studentId", student.getId());
+                    session.setAttribute("studentName", student.getName());
+                }
+                response.sendRedirect("StudentDashboardServlet");
+                return;
             }
-            response.sendRedirect("StudentDashboardServlet");
-            return;
+            request.setAttribute("errorMessage", "Invalid email or password");
+        } catch (Exception e) {
+            request.setAttribute("errorMessage", "Database is unavailable. Please ensure MySQL server is running.");
         }
-
-        request.setAttribute("errorMessage", "Invalid email or password");
         request.getRequestDispatcher("jsp/student-login.jsp").forward(request, response);
     }
 }
